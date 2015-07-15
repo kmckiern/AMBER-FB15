@@ -15,7 +15,11 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ff', type=str, default='fb15', choices=['fb15', 'fb15ni', 'ildn'], help='Select a force field to compare between Gromacs and AMBER.')
+parser.add_argument('--repo', type=str, help='path to AMBER-FB15 repo root')
 args, sys.argv = parser.parse_known_args(sys.argv)
+
+# path to root of repository
+reporoot = args.repo
 
 # Disable Gromacs backup files
 os.environ["GMX_MAXBACKUP"] = "-1"
@@ -59,7 +63,7 @@ def RTPAtomNames(rtpfnm):
             answer.setdefault(resname, []).append((s[0], s[1], float(s[2])))
     return answer
 # Gromacs .rtp file with residue definitions
-gmxrtp = "/home/leeping/opt/gromacs/share/gromacs/top/amberfb15.ff/aminoacids.rtp"
+gmxrtp = reporoot + '/Params/GMX/amberfb15.ff/aminoacids.rtp'
 # Gromacs atom names in residues
 gmx_resatoms = RTPAtomNames(gmxrtp)
 
@@ -67,7 +71,8 @@ gmx_resatoms = RTPAtomNames(gmxrtp)
 amb_off = ['all_aminofb15.lib', 'all_aminoctfb15.lib', 'all_aminontfb15.lib']
 amb_resatoms = OrderedDict()
 for fin in amb_off:
-    AOff = parmed.modeller.offlib.AmberOFFLibrary.parse(os.path.join(os.environ['AMBERHOME'], 'dat', 'leap', 'lib', fin))
+    ambroot = reporoot + '/Params/AMBER'
+    AOff = parmed.modeller.offlib.AmberOFFLibrary.parse(os.path.join(ambroot, 'dat', 'leap', 'lib', fin))
     for k, v in AOff.items():
         for a in v.atoms:
             amb_resatoms.setdefault(k, []).append((a.name, a.type, a.charge))
