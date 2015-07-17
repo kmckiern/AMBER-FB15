@@ -98,11 +98,49 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
 # Note components unique to CHARMM (need to be mapped uniquely later)
 # Type99 atom types 
 CType99 = {"C*": "CS", "N*": "NS"}
-# Symmetric difference between A99SB xml and CHRM
+# Symmetric difference between A99SB xml and CHRM RTF residue names
 AResOnly = ['LYN', 'ASH']
 CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME']
 
 """
 STEP 1: parse in CHARMM AMBER99SB rtf file
+- add masses for new atom types
+- rename atom types in residue definitions
 """
-CRTF = args.crtf0
+# Read in RTF
+# create dictionary for each amino acid
+# dict between atomnames and atom types, by residue
+def ParseRTF(rtf):
+    specs = ['MASS', 'ATOM', 'BOND', 'IMPROPER', 'IC']
+    for line in open(rtf).readlines():
+        line = line.split(';')[0].strip()
+        s = line.split()
+        if len(s) == 0: continue
+        specifier = s[0]
+        if specifier == 'RESIDUE':
+            AA = s[1]
+            CAnAt[AA] = dict()
+        elif section == 'atoms':
+            GAnAt[AA][s[0]] = s[1]
+
+CRTF0 = args.crtf0
+ParseRTF(CRTF0)
+
+# Parse PRM
+# determine which atom class quartets receive
+# the sidechain-specific dihedral parameters.
+def ParsePRM(prm):
+    for line in open(rtf).readlines():
+        line = line.split(';')[0].strip()
+        s = line.split()
+        if len(s) == 0: continue
+        elif section == 'dihedrals':
+            dihan = tuple(s[:4])
+            # Obtain the quartet of new atom classes corresponding to this particular dihedral interaction
+            aci, acj, ack, acl = [NewAC.get(AA, {}).get(an,GAnAt[AA][an]) for an in dihan]
+            acijkl = get_ijkl(aci, acj, ack, acl)
+            # Insert the dihedral parameters into AA_DSC (keyed by the quartet of new atom classes)
+            if acijkl not in AA_DSC:
+                AA_DSC[acijkl] = []
+            if ITP._defines[s[4]].split() not in AA_DSC[acijkl]:
+                AA_DSC[acijkl].append(ITP._defines[s[4]].split())
