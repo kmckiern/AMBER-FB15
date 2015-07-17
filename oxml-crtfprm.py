@@ -7,8 +7,19 @@ import parmed as pmd
 from parmed.amber import parameters
 import xml.etree.ElementTree as ET
 from nifty import printcool_dictionary
+import argparse
 import IPython
 
+parser = argparse.ArgumentParser(description='convert A99SB xml to A99SB-FB15 CHARMM format')
+parser.add_argument('--a99sbxml', type=str, help='path to OpemMM A99SB xml', 
+    default='/home/leeping/src/OpenMM/wrappers/python/simtk/openmm/app/data/amber99sb.xml')
+parser.add_argument('--crtf0', type=str, help='path to CHARMM A99SB RTF file')
+parser.add_argument('--cprm0', type=str, help='path to CHARMM A99SB PRM file')
+args = parser.parse_args()
+
+"""
+STEP 0: read in AMBER99SB OpenMM xml file and create maps between residues and components
+"""
 # Atom types from parm99.dat
 Type99 = ["C", "CA", "CB", "CC", "CD", "CK", "CM", "CN", "CQ", "CR", "CT", "CV", 
           "CW", "C*", "CY", "CZ", "C0", "H", "HC", "H1", "H2", "H3", "HA", "H4", 
@@ -16,8 +27,6 @@ Type99 = ["C", "CA", "CB", "CC", "CD", "CK", "CM", "CN", "CQ", "CR", "CT", "CV",
           "MG", "N", "NA", "NB", "NC", "N2", "N3", "NT", "N*", "NY", "O", "O2", 
           "OW", "OH", "OS", "P", "S", "SH", "CU", "FE", "Li", "IP", "Na", "K", 
           "Rb", "Cs", "Zn", "LP"]
-# Type99 atom types uniquely renamed by CHARMM
-CType99 = {"C*": "CS", "N*": "NS"}
 
 # Mapping of amino acid atom names to new atom classes.  Mostly new
 # atom classes for beta carbons but a few new gamma carbons are
@@ -32,11 +41,9 @@ NewAC = {"SER":{"CB":"6S"}, "THR":{"CB":"6T", "CG2":"6t"}, "LEU":{"CB":"6L"},
          "ASP":{"CB":"6D"}, "LYS":{"CB":"6K"}, "LYN":{"CB":"6k"},
          "PRO":{"CB":"6P"}, "CYS":{"CB":"6C"}, "CYM":{"CB":"6c"},
          "MET":{"CB":"6M"}, "ASH":{"CB":"6d"}, "GLH":{"CB":"6J", "CG":"6j"}}
-# CHARMM residue names
-CRes = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME']
 
 # Parse the original AMBER99SB XML file.
-A99SB = ET.parse('/home/leeping/src/OpenMM/wrappers/python/simtk/openmm/app/data/amber99sb.xml')
+A99SB = ET.parse(args.a99sbxml)
 root = A99SB.getroot()
 A99SB_AtAc = {}
 A99SB_AnAc = {}
@@ -88,24 +95,14 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
                        ("OG", ("O", "sp3")), ("OL", ("O", "sp3")), ("AC", ("C", "sp3")),
                        ("EC", ("C", "sp3"))])
 
-# Parse the OpenMM XML file.
-OXML = ET.parse(sys.argv[1])
+# Note components unique to CHARMM (need to be mapped uniquely later)
+# Type99 atom types 
+CType99 = {"C*": "CS", "N*": "NS"}
+# Symmetric difference between A99SB xml and CHRM
+AResOnly = ['LYN', 'ASH']
+CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME']
 
-root = OXML.getroot()
-
-# OpenMM Atom Types to Atom Class
-OAtAc = OrderedDict()
-
-# OpenMM Atom Classes to Masses
-OAcMass = OrderedDict()
-
-# OpenMM Residue-Atom Names to Atom Class
-AA_OAc = OrderedDict()
-
-# OpenMM Atom Class to Parameter Mapping 
-# (vdW sigma and epsilon in AKMA)
-OAcPrm = OrderedDict()
-OBondPrm = OrderedDict()
-OAnglePrm = OrderedDict()
-ODihPrm = OrderedDict()
-OImpPrm = OrderedDict()
+"""
+STEP 1: parse in CHARMM AMBER99SB rtf file
+"""
+CRTF = args.crtf0
