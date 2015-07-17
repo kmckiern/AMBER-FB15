@@ -104,27 +104,33 @@ CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME'
 
 """
 STEP 1: parse in CHARMM AMBER99SB rtf file
-- add masses for new atom types
-- rename atom types in residue definitions
+- map atom types to masses
+- map atom names to atom types on a per residue basis
 """
-# Read in RTF
-# create dictionary for each amino acid
-# dict between atomnames and atom types, by residue
+# atom types to atom masses
+CAtAm = OrderedDict()
+# atom name to atom type, per residue
+CAnAt = OrderedDict()
 def ParseRTF(rtf):
-    specs = ['MASS', 'ATOM', 'BOND', 'IMPROPER', 'IC']
     for line in open(rtf).readlines():
-        line = line.split(';')[0].strip()
+        line = line.split('!')[0].strip()
         s = line.split()
         if len(s) == 0: continue
         specifier = s[0]
-        if specifier == 'RESIDUE':
-            AA = s[1]
+        if specifier == 'MASS':
+            spec, Anum, At, mass = s
+            CAtAm[At] = mass
+        elif specifier.startswith("RESI"):
+            spec, AA, AACharge = s
             CAnAt[AA] = dict()
-        elif section == 'atoms':
-            GAnAt[AA][s[0]] = s[1]
+        elif specifier == 'ATOM':
+            spec, An, At, ACharge = s
+            CAnAt[AA][An] = At
 
 CRTF0 = args.crtf0
 ParseRTF(CRTF0)
+
+IPython.embed()
 
 # Parse PRM
 # determine which atom class quartets receive
