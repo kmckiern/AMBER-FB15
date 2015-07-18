@@ -145,7 +145,7 @@ def RewriteRTF(rtf, lines):
     # get number of atom types
     n_at = len(CAtAm.keys())
     # log how many mass terms have been witnessed
-    n_mass = 1
+    n_mass = 0
     # references for parsing
     new_at = set(RevMap.keys())
     old_at = set(RevMap.values())
@@ -162,14 +162,14 @@ def RewriteRTF(rtf, lines):
                 n_mass += 1
         # once original masses have been passed, write new entries
         elif n_mass == n_at:
+            n_mass += 1
             for na, new_at in enumerate(RevMap):
                 sub_line = lines[at_lines[RevMap[new_at]]]
                 updated = sub_line.replace(RevMap[new_at], new_at)
                 orig_anum = sub_line.split()[1]
-                updated = updated.replace(orig_anum, str(n_mass + na))
-                updated = updated.replace('!', '! FB')
+                updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB')
                 of.write(updated)
-            n_mass += len(new_at)
+                n_mass += 1
         elif line.startswith('RESI'):
             RID = line.split()[1]
         elif RID not in CResOnly and line.startswith('ATOM'):
@@ -182,10 +182,19 @@ RewriteRTF(CRTF, l_rtf)
 IPython.embed()
 
 """
+STEP 2: rewrite CHARMM prm file
+- parse in file
+    - map atom types to masses
+    - map atom names to atom types on a per residue basis
+- write out file
+    - add new masses for each new atom type
+    - replace atom type with new atom classes
+
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
 def ParsePRM(prm):
+    sections = ['BONDS']
     for line in open(rtf).readlines():
         line = line.split(';')[0].strip()
         s = line.split()
