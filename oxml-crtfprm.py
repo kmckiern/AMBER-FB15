@@ -100,38 +100,87 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
 CType99 = {"C*": "CS", "N*": "NS"}
 # Symmetric difference between A99SB xml and CHRM RTF residue names
 AResOnly = ['LYN', 'ASH']
-CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME']
+CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
 
 """
-STEP 1: parse in CHARMM AMBER99SB rtf file
-- map atom types to masses
-- map atom names to atom types on a per residue basis
+STEP 1: rewrite CHARMM rtf file
+- parse in file
+    - map atom types to masses
+    - map atom names to atom types on a per residue basis
+- write out file
+    - add new masses for each new atom type
+    - replace atom type with new atom classes
 """
+CRTF = args.crtf0
 # atom types to atom masses
 CAtAm = OrderedDict()
 # atom name to atom type, per residue
 CAnAt = OrderedDict()
 def ParseRTF(rtf):
-    for line in open(rtf).readlines():
-        line = line.split('!')[0].strip()
-        s = line.split()
-        if len(s) == 0: continue
+    # read in original rft
+    lines = open(rtf).readlines()
+    for line in lines:
+        l = line.split('!')[0].strip()
+        s = l.split()
+        if len(s) == 0:
+            continue
         specifier = s[0]
+        # build map between atom types and masses
         if specifier == 'MASS':
             spec, Anum, At, mass = s
             CAtAm[At] = mass
+        # profile atom name to atom type on a per residue basis
         elif specifier.startswith("RESI"):
             spec, AA, AACharge = s
             CAnAt[AA] = dict()
+        # populate residue indexed map from atom names to atom types
         elif specifier == 'ATOM':
             spec, An, At, ACharge = s
             CAnAt[AA][An] = At
+    return lines
+l_rtf = ParseRTF(CRTF)
+def RewriteRTF(rtf, lines):
+    # open new rtf for writing
+    of = open(rtf + '.new', 'w+')
+    # get number of atom types
+    n_at = len(CAtAm.keys())
+    # log how many mass terms have been witnessed
+    n_mass = 0
+    # references for parsing
+    new_at = set(RevMap.keys())
+    old_at = set(RevMap.values())
+    at_lines = {}
+    RID = None
+    for ln, line in enumerate(lines):
+        if n_mass < n_at:
+            if line.startswith('MASS'):
+                l = line.split()
+                at = l[2]
+                # take note of line number if atom type is relevant
+                if at in old_at:
+                    at_lines[at] = ln
+                n_mass += 1
+        # once original masses have been passed, write new entries
+        elif n_mass == n_at:
+            for na, new_at in enumerate(RevMap):
+                sub_line = lines[at_lines[RevMap[new_at]]]
+                updated = sub_line.replace(RevMap[new_at], new_at)
+                orig_anum = sub_line.split()[1]
+                updated = updated.replace(orig_anum, str(n_mass + na))
+                updated = updated.replace('!', '! FB')
+                of.write(updated)
+            n_mass += len(new_at)
+        elif line.startswith('RESI'):
+            RID = line.split()[1]
+        elif RID not in CResOnly and line.startswith('ATOM'):
+            an = line.split()[1]
+            at = line.split()[2]
+            if at in NewAC[RID].keys():
+                line = line.replace(at, NewAC[RID][at])
+        of.write(line)
+RewriteRTF(CRTF, l_rtf)
 
-CRTF0 = args.crtf0
-ParseRTF(CRTF0)
-
-IPython.embed()
-
+"""
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
@@ -150,3 +199,4 @@ def ParsePRM(prm):
                 AA_DSC[acijkl] = []
             if ITP._defines[s[4]].split() not in AA_DSC[acijkl]:
                 AA_DSC[acijkl].append(ITP._defines[s[4]].split())
+"""
