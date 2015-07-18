@@ -145,7 +145,7 @@ def RewriteRTF(rtf, lines):
     # get number of atom types
     n_at = len(CAtAm.keys())
     # log how many mass terms have been witnessed
-    n_mass = 0
+    n_mass = 1
     # references for parsing
     new_at = set(RevMap.keys())
     old_at = set(RevMap.values())
@@ -175,10 +175,11 @@ def RewriteRTF(rtf, lines):
         elif RID not in CResOnly and line.startswith('ATOM'):
             an = line.split()[1]
             at = line.split()[2]
-            if at in NewAC[RID].keys():
-                line = line.replace(at, NewAC[RID][at])
+            if an in NewAC[RID].keys():
+                line = line.replace(at, NewAC[RID][an])
         of.write(line)
 RewriteRTF(CRTF, l_rtf)
+IPython.embed()
 
 """
 # Parse PRM
