@@ -102,6 +102,9 @@ CType99 = {"C*": "CS", "N*": "NS"}
 AResOnly = ['LYN', 'ASH']
 CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
 
+new_at = set(RevMap.keys())
+old_at = set(RevMap.values())
+
 """
 STEP 1: rewrite CHARMM rtf file
 - parse in file
@@ -122,8 +125,7 @@ def ParseRTF(rtf):
     for line in lines:
         l = line.split('!')[0].strip()
         s = l.split()
-        if len(s) == 0:
-            continue
+        if len(s) == 0: continue
         specifier = s[0]
         # build map between atom types and masses
         if specifier == 'MASS':
@@ -147,8 +149,6 @@ def RewriteRTF(rtf, lines):
     # log how many mass terms have been witnessed
     n_mass = 0
     # references for parsing
-    new_at = set(RevMap.keys())
-    old_at = set(RevMap.values())
     at_lines = {}
     RID = None
     for ln, line in enumerate(lines):
@@ -179,7 +179,6 @@ def RewriteRTF(rtf, lines):
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
 RewriteRTF(CRTF, l_rtf)
-IPython.embed()
 
 """
 STEP 2: rewrite CHARMM prm file
@@ -189,24 +188,41 @@ STEP 2: rewrite CHARMM prm file
 - write out file
     - add new masses for each new atom type
     - replace atom type with new atom classes
-
+"""
+CPRM = args.cprm0
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
-def ParsePRM(prm):
-    sections = ['BONDS']
-    for line in open(rtf).readlines():
-        line = line.split(';')[0].strip()
-        s = line.split()
+def RewritePRM(prm):
+    # open new prm for writing
+    of = open(prm + '.new', 'w+')
+    section = None
+    sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
+    for ln, line in enumerate(open(prm).readlines()):
+        l = line.split('!')[0].strip()
+        s = l.split()
+        if section != None:
+            # append new AC params to end of section
+            if len(s) == 0:
+                for newAC in new_at:
+                    # substitute old AT with new
+                    for p_line in old_lines:
+                        line = lines[p_line]
+                        l = line.split()
+                        at_replace = [x for x in enumerate(l) if x in old_at]
+                        for swap in at_replace:
+                            line = line.replace(swap, newAC)
+                        of.write(line)
+                section = None
+                continue
+            # store line numbers of param specs involving old ATs
+            else:
+                if bool(set(s) & set(old_at)):
+                    old_lines.append(ln)
         if len(s) == 0: continue
-        elif section == 'dihedrals':
-            dihan = tuple(s[:4])
-            # Obtain the quartet of new atom classes corresponding to this particular dihedral interaction
-            aci, acj, ack, acl = [NewAC.get(AA, {}).get(an,GAnAt[AA][an]) for an in dihan]
-            acijkl = get_ijkl(aci, acj, ack, acl)
-            # Insert the dihedral parameters into AA_DSC (keyed by the quartet of new atom classes)
-            if acijkl not in AA_DSC:
-                AA_DSC[acijkl] = []
-            if ITP._defines[s[4]].split() not in AA_DSC[acijkl]:
-                AA_DSC[acijkl].append(ITP._defines[s[4]].split())
-"""
+        elif s[0] in sections:
+            section = s[0]
+            old_lines = []
+        of.write(line)
+RewritePRM(CPRM)
+IPython.embed()
