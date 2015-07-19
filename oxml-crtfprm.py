@@ -182,12 +182,9 @@ def RewriteRTF(rtf, lines):
 
 """
 STEP 2: rewrite CHARMM prm file
-- parse in file
-    - map atom types to masses
-    - map atom names to atom types on a per residue basis
-- write out file
-    - add new masses for each new atom type
-    - replace atom type with new atom classes
+- read in lines with old atom types
+- append each section with new atom classes
+- add in new torsional quartet parameters
 """
 CPRM = args.cprm0
 # Parse PRM
@@ -200,6 +197,9 @@ def RewritePRM(prm):
     sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
+        if line.startswith('!'):
+            of.write(line)
+            continue
         l = line.split('!')[0].strip()
         s = l.split()
         if section != None:
@@ -213,7 +213,7 @@ def RewritePRM(prm):
                         at_replace = set([x for x in l if x in old_at])
                         for swap in at_replace:
                             new_line = new_line.replace(swap, newAC)
-                        of.write(new_line.replace('! ', '!  FB'))
+                        of.write(new_line.replace('! ', '!  FB '))
                 section = None
                 of.write(line)
             # store line numbers of lines concerning old ATs
