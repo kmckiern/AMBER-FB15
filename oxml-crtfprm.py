@@ -178,7 +178,7 @@ def RewriteRTF(rtf, lines):
             if an in NewAC[RID].keys():
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
-RewriteRTF(CRTF, l_rtf)
+# RewriteRTF(CRTF, l_rtf)
 
 """
 STEP 2: rewrite CHARMM prm file
@@ -198,7 +198,8 @@ def RewritePRM(prm):
     of = open(prm + '.new', 'w+')
     section = None
     sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
-    for ln, line in enumerate(open(prm).readlines()):
+    lines = open(prm).readlines()
+    for ln, line in enumerate(lines):
         l = line.split('!')[0].strip()
         s = l.split()
         if section != None:
@@ -206,23 +207,22 @@ def RewritePRM(prm):
             if len(s) == 0:
                 for newAC in new_at:
                     # substitute old AT with new
-                    for p_line in old_lines:
-                        line = lines[p_line]
-                        l = line.split()
-                        at_replace = [x for x in enumerate(l) if x in old_at]
+                    for p_line in relevant_lines:
+                        new_line = lines[p_line]
+                        l = new_line.split()
+                        at_replace = set([x for x in l if x in old_at])
                         for swap in at_replace:
-                            line = line.replace(swap, newAC)
-                        of.write(line)
+                            new_line = new_line.replace(swap, newAC)
+                        of.write(new_line.replace('! ', '!  FB'))
                 section = None
-                continue
-            # store line numbers of param specs involving old ATs
+                of.write(line)
+            # store line numbers of lines concerning old ATs
             else:
                 if bool(set(s) & set(old_at)):
-                    old_lines.append(ln)
-        if len(s) == 0: continue
-        elif s[0] in sections:
-            section = s[0]
-            old_lines = []
+                    relevant_lines.append(ln)
+        elif len(s) > 0:
+            if s[0] in sections:
+                section = s[0]
+                relevant_lines = []
         of.write(line)
 RewritePRM(CPRM)
-IPython.embed()
