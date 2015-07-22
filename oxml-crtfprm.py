@@ -10,11 +10,13 @@ from nifty import printcool_dictionary
 import argparse
 import IPython
 
-parser = argparse.ArgumentParser(description='convert A99SB xml to A99SB-FB15 CHARMM format')
-parser.add_argument('--a99sbxml', type=str, help='path to OpemMM A99SB xml', 
+parser = argparse.ArgumentParser(description='convert A99SB-FB15 xml to A99SB-FB15 CHARMM format')
+parser.add_argument('--ambxml', type=str, help='path to OpemMM A99SB xml', 
     default='/home/leeping/src/OpenMM/wrappers/python/simtk/openmm/app/data/amber99sb.xml')
-parser.add_argument('--crtf0', type=str, help='path to CHARMM A99SB RTF file')
-parser.add_argument('--cprm0', type=str, help='path to CHARMM A99SB PRM file')
+parser.add_argument('--ambfbxml', type=str, help='path to OpemMM A99SB xml', 
+    default='/home/kmckiern/ff/AMBER-FB15/Params/OpenMM')
+parser.add_argument('--rtf', type=str, help='path to CHARMM A99SB RTF file')
+parser.add_argument('--prm', type=str, help='path to CHARMM A99SB PRM file')
 args = parser.parse_args()
 
 """
@@ -43,7 +45,7 @@ NewAC = {"SER":{"CB":"6S"}, "THR":{"CB":"6T", "CG2":"6t"}, "LEU":{"CB":"6L"},
          "MET":{"CB":"6M"}, "ASH":{"CB":"6d"}, "GLH":{"CB":"6J", "CG":"6j"}}
 
 # Parse the original AMBER99SB XML file.
-A99SB = ET.parse(args.a99sbxml)
+A99SB = ET.parse(args.ambxml)
 root = A99SB.getroot()
 A99SB_AtAc = {}
 A99SB_AnAc = {}
@@ -114,7 +116,7 @@ STEP 1: rewrite CHARMM rtf file
     - add new masses for each new atom type
     - replace atom type with new atom classes
 """
-CRTF = args.crtf0
+CRTF = args.rtf
 # atom types to atom masses
 CAtAm = OrderedDict()
 # atom name to atom type, per residue
@@ -178,7 +180,7 @@ def RewriteRTF(rtf, lines):
             if an in NewAC[RID].keys():
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
-# RewriteRTF(CRTF, l_rtf)
+RewriteRTF(CRTF, l_rtf)
 
 """
 STEP 2: rewrite CHARMM prm file
@@ -186,7 +188,7 @@ STEP 2: rewrite CHARMM prm file
 - append each section with new atom classes
 - add in new torsional quartet parameters
 """
-CPRM = args.cprm0
+CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
@@ -226,3 +228,4 @@ def RewritePRM(prm):
                 relevant_lines = []
         of.write(line)
 RewritePRM(CPRM)
+
