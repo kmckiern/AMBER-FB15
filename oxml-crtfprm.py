@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='convert A99SB-FB15 xml to A99SB-FB
 parser.add_argument('--ambxml', type=str, help='path to OpemMM A99SB xml', 
     default='/home/leeping/src/OpenMM/wrappers/python/simtk/openmm/app/data/amber99sb.xml')
 parser.add_argument('--ambfbxml', type=str, help='path to OpemMM A99SB xml', 
-    default='/home/kmckiern/ff/AMBER-FB15/Params/OpenMM')
+    default='/home/kmckiern/ff/AMBER-FB15/Params/OpenMM/amber-fb15.xml')
 parser.add_argument('--rtf', type=str, help='path to CHARMM A99SB RTF file')
 parser.add_argument('--prm', type=str, help='path to CHARMM A99SB PRM file')
 args = parser.parse_args()
@@ -96,6 +96,88 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
                        ("I",  ("I",  "sp3")), ("FE", ("Fe", "sp3")), ("EP", ("",  "sp3")), 
                        ("OG", ("O", "sp3")), ("OL", ("O", "sp3")), ("AC", ("C", "sp3")),
                        ("EC", ("C", "sp3"))])
+
+def xml_torsions(xml_parsed):
+    root = xml_parsed.getroot()
+    # maps
+    XDihPrm = OrderedDict()
+    XImpPrm = OrderedDict()
+    Params = parameters.ParameterSet()
+    # populate maps
+    for force in root:
+        # Periodic torsion parameters.
+        if force.tag == 'PeriodicTorsionForce':
+            for elem in force:
+                att = elem.attrib
+                def fillx(strin):
+                    if strin == "" : return "X"
+                    else: return strin
+                c1 = fillx(att['class1'])
+                c2 = fillx(att['class2'])
+                c3 = fillx(att['class3'])
+                c4 = fillx(att['class4'])
+                DC = (c1, c2, c3, c4)
+                DCr = (c4, c3, c2, c1)
+                if c1 > c4:
+                    # Reverse ordering if class4 is alphabetically before class1
+                    acijkl = DCr
+                elif c1 < c4:
+                    # Forward ordering if class1 is alphabetically before class4
+                    acijkl = DC
+                else:
+                    # If class1 and class4 are the same, order by class2/class3
+                    if c2 > c3:
+                        acijkl = DCr
+                    elif c3 > c2:
+                        acijkl = DC
+                    else:
+                        acijkl = DC
+                keylist = sorted([i for i in att.keys() if 'class' not in i])
+                dprms = OrderedDict()
+                for p in range(1, 7):
+                    pkey = "periodicity%i" % p
+                    fkey = "phase%i" % p
+                    kkey = "k%i" % p
+                    if pkey in keylist:
+                        dprms[int(att[pkey])] = (float(att[fkey])*180.0/np.pi, float(att[kkey])/4.184)
+                dprms = OrderedDict([(p, dprms[p]) for p in sorted(dprms.keys())])
+                # ParmEd dihedral list
+                dihedral_list = []
+                for p in dprms.keys():
+                    f, k = dprms[p]
+                    dihedral_list.append(pmd.DihedralType(k, p, f, 1.2, 2.0, list=dihedral_list))
+                    # Pass information to ParmEd
+                    dtyp = 'normal' if (elem.tag == 'Proper') else 'improper'
+                    Params._add_dihedral(acijkl[0], acijkl[1], acijkl[2], acijkl[3],
+                                         pk=k, phase=f, periodicity=p, dihtype=dtyp)
+                if elem.tag == 'Proper':
+                    if acijkl in XDihPrm:
+                        print acijkl, "already defined in XDihPrm"
+                        raise RuntimeError
+                    XDihPrm[acijkl] = dprms
+                    # New Params object can't write frcmod files.
+                    # Params.dihedral_types[acijkl] = dihedral_list
+                elif elem.tag == 'Improper':
+                    if acijkl in XImpPrm:
+                        print acijkl, "already defined in XImpPrm"
+                        raise RuntimeError
+                    XImpPrm[acijkl] = dprms
+                    if len(dihedral_list) > 1:
+                        print acijkl, "more than one interaction"
+                        raise RuntimeError
+                    # New Params object can't write frcmod files.
+                    # Params.improper_periodic_types[acijkl] = dihedral_list[0]
+                else:
+                    raise RuntimeError
+        else:
+            continue
+    return XDihPrm, XImpPrm, Params
+
+A99SB_DihPrm, A99SB_ImpPrm, A99SB_Params = xml_torsions(A99SB)
+A99SBFB = ET.parse(args.ambfbxml)
+A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_Params = xml_torsions(A99SBFB)
+
+IPython.embed()
 
 # Note components unique to CHARMM (need to be mapped uniquely later)
 # Type99 atom types 
