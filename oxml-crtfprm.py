@@ -305,24 +305,6 @@ def RewritePRM(prm):
         l = line.split('!')[0].strip()
         s = l.split()
         if section != None:
-            # if dihedral params, look up new param values
-            if section == 'PHI':
-                print l
-                dih_quart = tuple(s[:4])
-                # IPython.embed()
-                dih_old = A99SB_DihPrm[dih_quart]
-                dih_new = A99SBFB_DihPrm[dih_quart]
-                for mult in dih_old.keys():
-                    if l[5] != mult:
-                        continue
-                    else:
-                        geo_old, phi_old = dih_old[mult]
-                        geo_new, phi_new = dih_new[mult]
-                        print line
-                        print format_geo(geo_old), format_geo(geo_new)
-                        print format_phi(phi_old), format_phi(phi_new)
-                        line = line.replace(format_geo(geo_old), format_geo(geo_new))
-                        line = line.replace(format_phi(phi_old), format_phi(phi_new))
             # append new AC params to end of section
             if len(s) == 0:
                 for newAC in new_at:
@@ -340,6 +322,30 @@ def RewritePRM(prm):
             else:
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
+            # if dihedral params, look up new param values
+            if section == 'PHI':
+                dih_quart = tuple(s[:4])
+                # IPython.embed()
+                if dih_quart not in A99SB_DihPrm.keys():
+                    # sometimes the ordering is backwards
+                    dih_quart_r = tuple(list(dih_quart)[::-1])
+                    if dih_quart_r not in A99SB_DihPrm.keys():
+                        raise RuntimeError
+                    else:
+                        dih_quart = dih_quart_r
+                dih_old = A99SB_DihPrm[dih_quart]
+                dih_new = A99SBFB_DihPrm[dih_quart]
+                for mult in dih_old.keys():
+                    if s[5] != str(mult):
+                        continue
+                    else:
+                        print 'test', l
+                        geo_old, phi_old = dih_old[mult]
+                        geo_new, phi_new = dih_new[mult]
+                        print format_geo(geo_old), format_geo(geo_new)
+                        print format_phi(phi_old), format_phi(phi_new)
+                        line = line.replace(format_geo(geo_old), format_geo(geo_new))
+                        line = line.replace(format_phi(phi_old), format_phi(phi_new))
         elif len(s) > 0:
             if s[0] in sections:
                 section = s[0]
