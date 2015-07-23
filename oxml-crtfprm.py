@@ -72,6 +72,9 @@ for k1, v1 in NewAC.items():
             raise RuntimeError
         RevMap[v2] = A99SB_AnAc[k1][k2]
 
+new_at = set(RevMap.keys())
+old_at = set(RevMap.values())
+
 # Mappings of AMBER99(SB) atom types to elements and hybridization
 A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", "sp3")), 
                        ("H1", ("H", "sp3")), ("H2", ("H", "sp3")), ("H3", ("H", "sp3")),
@@ -96,6 +99,13 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
                        ("I",  ("I",  "sp3")), ("FE", ("Fe", "sp3")), ("EP", ("",  "sp3")), 
                        ("OG", ("O", "sp3")), ("OL", ("O", "sp3")), ("AC", ("C", "sp3")),
                        ("EC", ("C", "sp3"))])
+
+# Note components unique to CHARMM (need to be mapped uniquely later)
+# Type99 atom types 
+CType99 = {"C*": "CS", "N*": "NS"}
+# Symmetric difference between A99SB xml and CHRM RTF residue names
+AResOnly = ['LYN', 'ASH']
+CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
 
 def xml_torsions(xml_parsed):
     root = xml_parsed.getroot()
@@ -154,6 +164,15 @@ def xml_torsions(xml_parsed):
                     if acijkl in XDihPrm:
                         print acijkl, "already defined in XDihPrm"
                         raise RuntimeError
+                    # alter key so it has the CHARMM standard
+                    if len(set(acijkl).intersection(CType99.values())):
+                        chrm_acijkl = []
+                        for AC in acijkl:
+                            if AC in CType99.values():
+                                chrm_acijkl.append(CType99[AC])
+                            else:
+                                chrm_acijkl.append(AC)
+                        acijkl = chrm_acijkl
                     XDihPrm[acijkl] = dprms
                     # New Params object can't write frcmod files.
                     # Params.dihedral_types[acijkl] = dihedral_list
@@ -177,17 +196,10 @@ A99SB_DihPrm, A99SB_ImpPrm, A99SB_Params = xml_torsions(A99SB)
 A99SBFB = ET.parse(args.ambfbxml)
 A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_Params = xml_torsions(A99SBFB)
 
-IPython.embed()
-
-# Note components unique to CHARMM (need to be mapped uniquely later)
-# Type99 atom types 
-CType99 = {"C*": "CS", "N*": "NS"}
-# Symmetric difference between A99SB xml and CHRM RTF residue names
-AResOnly = ['LYN', 'ASH']
-CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
-
-new_at = set(RevMap.keys())
-old_at = set(RevMap.values())
+# get elements in A99SBFB_DihPrm not present in A99SB_DihPrm
+DihPrm_new = list(set(A99SBFB_DihPrm.keys()) - set(A99SB_DihPrm.keys()))
+# also get overlapping keys
+DihPrm_overlap = list(set(A99SBFB_DihPrm.keys()) - set(DihPrm_new))
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -270,6 +282,12 @@ STEP 2: rewrite CHARMM prm file
 - append each section with new atom classes
 - add in new torsional quartet parameters
 """
+# for formatting dihedral params
+def format_geo(angle):
+    return str(angle).ljust(5, '0')
+def format_phi(fc):
+    return round(fc, 10)
+
 CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
@@ -287,6 +305,23 @@ def RewritePRM(prm):
         l = line.split('!')[0].strip()
         s = l.split()
         if section != None:
+            # if dihedral params, look up new param values
+            if section == 'PHI':
+                print l
+                dih_quart = tuple(s[:4])
+                dih_old = A99SB_DihPrm[dih_quart]
+                dih_new = A99SBFB_DihPrm[dih_quart]
+                for mult in dih_old.keys():
+                    if l[5] != mult:
+                        continue
+                    else:
+                        geo_old, phi_old = dih_old[mult]
+                        geo_new, phi_new = dih_new[mult]
+                        print line
+                        print format_geo(geo_old), format_geo(geo_new)
+                        print format_phi(phi_old), format_phi(phi_new)
+                        line = line.replace(format_geo(geo_old), format_geo(geo_new))
+                        line = line.replace(format_phi(phi_old), format_phi(phi_new))
             # append new AC params to end of section
             if len(s) == 0:
                 for newAC in new_at:
@@ -311,3 +346,4 @@ def RewritePRM(prm):
         of.write(line)
 RewritePRM(CPRM)
 
+IPython.embed()
