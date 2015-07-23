@@ -165,14 +165,14 @@ def xml_torsions(xml_parsed):
                         print acijkl, "already defined in XDihPrm"
                         raise RuntimeError
                     # alter key so it has the CHARMM standard
-                    if len(set(acijkl).intersection(CType99.values())):
+                    if len(set(acijkl).intersection(CType99.keys())) > 0:
                         chrm_acijkl = []
                         for AC in acijkl:
-                            if AC in CType99.values():
+                            if AC in CType99.keys():
                                 chrm_acijkl.append(CType99[AC])
                             else:
                                 chrm_acijkl.append(AC)
-                        acijkl = chrm_acijkl
+                        acijkl = tuple(chrm_acijkl)
                     XDihPrm[acijkl] = dprms
                     # New Params object can't write frcmod files.
                     # Params.dihedral_types[acijkl] = dihedral_list
@@ -309,6 +309,7 @@ def RewritePRM(prm):
             if section == 'PHI':
                 print l
                 dih_quart = tuple(s[:4])
+                # IPython.embed()
                 dih_old = A99SB_DihPrm[dih_quart]
                 dih_new = A99SBFB_DihPrm[dih_quart]
                 for mult in dih_old.keys():
