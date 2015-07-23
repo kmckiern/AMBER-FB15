@@ -283,10 +283,14 @@ STEP 2: rewrite CHARMM prm file
 - add in new torsional quartet parameters
 """
 # for formatting dihedral params
-def format_geo(angle):
-    return str(angle).ljust(5, '0')
-def format_phi(fc):
-    return round(fc, 10)
+def format_param(param, c_len):
+    f = str(param)
+    if len(f) < c_len:
+        return f.ljust(c_len, '0')[:c_len]
+    if len(f) == c_len:
+        return f
+    else:
+        return str(round(param, c_len))[:c_len]
 
 CPRM = args.prm
 # Parse PRM
@@ -325,7 +329,6 @@ def RewritePRM(prm):
             # if dihedral params, look up new param values
             if section == 'PHI':
                 dih_quart = tuple(s[:4])
-                # IPython.embed()
                 if dih_quart not in A99SB_DihPrm.keys():
                     # sometimes the ordering is backwards
                     dih_quart_r = tuple(list(dih_quart)[::-1])
@@ -339,13 +342,13 @@ def RewritePRM(prm):
                     if s[5] != str(mult):
                         continue
                     else:
-                        print 'test', l
+                        print l
                         geo_old, phi_old = dih_old[mult]
                         geo_new, phi_new = dih_new[mult]
-                        print format_geo(geo_old), format_geo(geo_new)
-                        print format_phi(phi_old), format_phi(phi_new)
-                        line = line.replace(format_geo(geo_old), format_geo(geo_new))
-                        line = line.replace(format_phi(phi_old), format_phi(phi_new))
+                        print format_param(geo_old, 5), format_param(geo_new, 5)
+                        print format_param(phi_old, 10), format_param(phi_new, 10)
+                        line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
+                        line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
         elif len(s) > 0:
             if s[0] in sections:
                 section = s[0]
