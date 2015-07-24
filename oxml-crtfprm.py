@@ -310,16 +310,18 @@ def get_dquart(s, param_keys):
         else:
             dih_quart = dih_quart_r
     return dih_quart
-def sub_dihed(s, line, stage):
+def sub_existing(s, line, stage):
     if stage == 'existing':
-        param = A99SB_DihPrm
+        param_old = A99SB_DihPrm
+        param_new = A99SBFB_DihPrm
     if stage == 'new':
-        param = A99SBFB_DihPrm
-    dih_quart = get_dquart(s, param.keys())
+        param_old = A99SBFB_DihPrm
+        param_new = A99SBFB_DihPrm
+    dih_quart = get_dquart(s, param_old.keys())
     if dih_quart == None:
         return line
-    dih_old = param[dih_quart]
-    dih_new = param[dih_quart]
+    dih_old = param_old[dih_quart]
+    dih_new = param_new[dih_quart]
     for mult in dih_old.keys():
         # TODO: handle extra multiplicities
         if s[5] != str(mult):
@@ -335,6 +337,7 @@ CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
+def most_similar(tuple_query, )
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
@@ -350,26 +353,29 @@ def RewritePRM(prm):
         if section != None:
             # append new AC params to end of section
             if len(s) == 0:
-                for newAC in new_at:
-                    # substitute old AT with new
-                    for p_line in relevant_lines:
-                        new_line = lines[p_line]
-                        # add FB comment
-                        new_line = new_line.replace('!', '!  FB')
-                        # preserve white space
-                        l = re.split(r'(\s+)', new_line)
-                        # get indices of what needs to be replaced
-                        at_replace = find_all_indices(l, old_at)
-                        # TODO: use AA graphs to remove superfluous dihedral specifications
-                        for swap in at_replace:
-                            # TODO: handle if old and new AC are of variable length
-                            l[swap] = newAC
-                            new_line_sub = ''.join(l)
-                            #if section == 'PHI':
-                            #    s = new_line.split()
-                            #    new_line = sub_dihed(s, line, 'new')
-                            of.write(''.join(new_line_sub))
+                if section == 'PHI':
+                    for new_dih in DihPrm_new:
+                        reference = closest(new_dih, relevant_lines)
+                        s = new_line.split()
+                        new_line = sub_dihed(s, line, 'new')
+                else:
+                    for newAC in new_at:
+                        # substitute old AT with new
+                        for p_line in relevant_lines:
+                            new_line = lines[p_line]
+                            # add FB comment
+                            new_line = new_line.replace('!', '!  FB')
+                            # preserve white space
                             l = re.split(r'(\s+)', new_line)
+                            # get indices of what needs to be replaced
+                            at_replace = find_all_indices(l, old_at)
+                            # TODO: use AA graphs to remove superfluous dihedral specifications
+                            for swap in at_replace:
+                                # TODO: handle if old and new AC are of variable length
+                                l[swap] = newAC
+                                new_line_sub = ''.join(l)
+                                of.write(''.join(new_line_sub))
+                                l = re.split(r'(\s+)', new_line)
                 section = None
                 of.write(line)
             # store line numbers of lines with old ACs
@@ -379,6 +385,8 @@ def RewritePRM(prm):
             # if dihedral params, look up new param values
             if section == 'PHI':
                 sub_line = sub_dihed(s, line, 'existing')
+                line = sub_line
+                # global substitution (useful for adding new entries)
                 lines[ln] = sub_line
         elif len(s) > 0:
             if s[0] in sections:
