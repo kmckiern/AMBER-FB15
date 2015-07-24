@@ -292,18 +292,43 @@ def format_param(param, c_len):
         return f
     else:
         return str(round(param, c_len))[:c_len]
-
-CPRM = args.prm
-# Parse PRM
-# determine which atom class quartets receive
-# the sidechain-specific dihedral parameters.
+# for finding string indicies for a list of keys
 def find_all_indices(str_l, keys):
     indices = []
     for i, ele in enumerate(str_l):
         if ele in keys:
             indices.append(i)
     return indices
+# for substituting dihedral parameters
+def get_dquart(s):
+    dih_quart = tuple(s[:4])
+    if dih_quart not in A99SB_DihPrm.keys():
+        # sometimes the ordering is backwards
+        dih_quart_r = tuple(list(dih_quart)[::-1])
+        if dih_quart_r not in A99SB_DihPrm.keys():
+            raise RuntimeError
+        else:
+            dih_quart = dih_quart_r
+    return dih_quart
+def sub_dihed(s, line):
+    dih_quart = get_dquart(s)
+    dih_old = A99SB_DihPrm[dih_quart]
+    dih_new = A99SBFB_DihPrm[dih_quart]
+    for mult in dih_old.keys():
+        # TODO: handle extra multiplicities
+        if s[5] != str(mult):
+            continue
+        else:
+            geo_old, phi_old = dih_old[mult]
+            geo_new, phi_new = dih_new[mult]
+            line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
+            line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
+    return line
 
+CPRM = args.prm
+# Parse PRM
+# determine which atom class quartets receive
+# the sidechain-specific dihedral parameters.
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
@@ -329,10 +354,15 @@ def RewritePRM(prm):
                         l = re.split(r'(\s+)', new_line)
                         # get indices of what needs to be replaced
                         at_replace = find_all_indices(l, old_at)
+                        # TODO: use AA graphs to remove superfluous dihedral specifications
                         for swap in at_replace:
                             # TODO: handle if old and new AC are of variable length
                             l[swap] = newAC
-                            of.write(''.join(l))
+                            new_line = ''.join(l)
+                            if section == 'PHI':
+                                s = new_line.split()
+                                sub_dihed(s, line)
+                            of.write(''.join(new_line))
                             l = re.split(r'(\s+)', new_line)
                 section = None
                 of.write(line)
@@ -346,24 +376,8 @@ def RewritePRM(prm):
                     relevant_lines.append(ln)
             # if dihedral params, look up new param values
             if section == 'PHI':
-                dih_quart = tuple(s[:4])
-                if dih_quart not in A99SB_DihPrm.keys():
-                    # sometimes the ordering is backwards
-                    dih_quart_r = tuple(list(dih_quart)[::-1])
-                    if dih_quart_r not in A99SB_DihPrm.keys():
-                        raise RuntimeError
-                    else:
-                        dih_quart = dih_quart_r
-                dih_old = A99SB_DihPrm[dih_quart]
-                dih_new = A99SBFB_DihPrm[dih_quart]
-                for mult in dih_old.keys():
-                    if s[5] != str(mult):
-                        continue
-                    else:
-                        geo_old, phi_old = dih_old[mult]
-                        geo_new, phi_new = dih_new[mult]
-                        line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
-                        line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
+                sub_line = sub_dihed(s, line)
+                lines[ln] = sub_line
         elif len(s) > 0:
             if s[0] in sections:
                 section = s[0]
