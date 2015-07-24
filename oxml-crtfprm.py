@@ -300,20 +300,26 @@ def find_all_indices(str_l, keys):
             indices.append(i)
     return indices
 # for substituting dihedral parameters
-def get_dquart(s):
+def get_dquart(s, param_keys):
     dih_quart = tuple(s[:4])
-    if dih_quart not in A99SB_DihPrm.keys():
+    if dih_quart not in param_keys:
         # sometimes the ordering is backwards
         dih_quart_r = tuple(list(dih_quart)[::-1])
-        if dih_quart_r not in A99SB_DihPrm.keys():
-            raise RuntimeError
+        if dih_quart_r not in param_keys:
+            return None
         else:
             dih_quart = dih_quart_r
     return dih_quart
-def sub_dihed(s, line):
-    dih_quart = get_dquart(s)
-    dih_old = A99SB_DihPrm[dih_quart]
-    dih_new = A99SBFB_DihPrm[dih_quart]
+def sub_dihed(s, line, stage):
+    if stage == 'existing':
+        param = A99SB_DihPrm
+    if stage == 'new':
+        param = A99SBFB_DihPrm
+    dih_quart = get_dquart(s, param.keys())
+    if dih_quart == None:
+        return line
+    dih_old = param[dih_quart]
+    dih_new = param[dih_quart]
     for mult in dih_old.keys():
         # TODO: handle extra multiplicities
         if s[5] != str(mult):
@@ -358,25 +364,21 @@ def RewritePRM(prm):
                         for swap in at_replace:
                             # TODO: handle if old and new AC are of variable length
                             l[swap] = newAC
-                            new_line = ''.join(l)
-                            if section == 'PHI':
-                                s = new_line.split()
-                                sub_dihed(s, line)
-                            of.write(''.join(new_line))
+                            new_line_sub = ''.join(l)
+                            #if section == 'PHI':
+                            #    s = new_line.split()
+                            #    new_line = sub_dihed(s, line, 'new')
+                            of.write(''.join(new_line_sub))
                             l = re.split(r'(\s+)', new_line)
                 section = None
                 of.write(line)
-                ## write new dihedral params
-                #else:
-                #    for newDih in  DihPrm_new:
-                #        DihPrm_new = list(set(A99SBFB_DihPrm.keys()) - set(A99SB_DihPrm.keys()))
-            # store line numbers of lines concerning old ATs
+            # store line numbers of lines with old ACs
             else:
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
             # if dihedral params, look up new param values
             if section == 'PHI':
-                sub_line = sub_dihed(s, line)
+                sub_line = sub_dihed(s, line, 'existing')
                 lines[ln] = sub_line
         elif len(s) > 0:
             if s[0] in sections:
