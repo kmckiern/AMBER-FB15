@@ -310,18 +310,13 @@ def get_dquart(s, param_keys):
         else:
             dih_quart = dih_quart_r
     return dih_quart
-def sub_existing(s, line, stage):
-    if stage == 'existing':
-        param_old = A99SB_DihPrm
-        param_new = A99SBFB_DihPrm
-    if stage == 'new':
-        param_old = A99SBFB_DihPrm
-        param_new = A99SBFB_DihPrm
-    dih_quart = get_dquart(s, param_old.keys())
+# substitute new torsional parameters for existing ACs
+def sub_existing(s, line):
+    dih_quart = get_dquart(s, A99SB_DihPrm.keys())
     if dih_quart == None:
         return line
-    dih_old = param_old[dih_quart]
-    dih_new = param_new[dih_quart]
+    dih_old = A99SB_DihPrm[dih_quart]
+    dih_new = A99SBFB_DihPrm[dih_quart]
     for mult in dih_old.keys():
         # TODO: handle extra multiplicities
         if s[5] != str(mult):
@@ -332,12 +327,35 @@ def sub_existing(s, line, stage):
             line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
             line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
     return line
+# if AC quartet is new, sub terms from a similar reference line
+# assume split into terms, without whitespace
+def add_dihed(new_quart, ref_line):
+    new_line = ref_line.split()[:7]
+    for mult in A99SBFB_DihPrm[new_quart]:
+        min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
+        min_geo = format_param(min_geo, 5)
+        k_phi = format_param(k_phi, 10)
+        for ndx, val in enumerate(new_line):
+             # replace ACs
+             if ndx < 4:
+                 sub = new_quart[ndx]
+             # replace force constant
+             elif ndx == 5: 
+                 sub = k_phi
+             elif ndx == 6:
+                 sub = str(mult)
+             elif ndx == 7:
+                 sub = min_geo
+             new_line[ndx] = sub
+    new_line.append('! FB NEW')
+    subbed = ' '.join(new_line)
+    print subbed
+    return subbed
 
 CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
-def most_similar(tuple_query, )
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
@@ -353,12 +371,7 @@ def RewritePRM(prm):
         if section != None:
             # append new AC params to end of section
             if len(s) == 0:
-                if section == 'PHI':
-                    for new_dih in DihPrm_new:
-                        reference = closest(new_dih, relevant_lines)
-                        s = new_line.split()
-                        new_line = sub_dihed(s, line, 'new')
-                else:
+                if section != 'PHI':
                     for newAC in new_at:
                         # substitute old AT with new
                         for p_line in relevant_lines:
@@ -376,6 +389,11 @@ def RewritePRM(prm):
                                 new_line_sub = ''.join(l)
                                 of.write(''.join(new_line_sub))
                                 l = re.split(r'(\s+)', new_line)
+                else:
+                    for new_dih in DihPrm_new:
+                        reference = lines[relevant_lines[-1]]
+                        line = add_dihed(new_dih, reference)
+                        print >>of, line
                 section = None
                 of.write(line)
             # store line numbers of lines with old ACs
@@ -384,7 +402,7 @@ def RewritePRM(prm):
                     relevant_lines.append(ln)
             # if dihedral params, look up new param values
             if section == 'PHI':
-                sub_line = sub_dihed(s, line, 'existing')
+                sub_line = sub_existing(s, line)
                 line = sub_line
                 # global substitution (useful for adding new entries)
                 lines[ln] = sub_line
