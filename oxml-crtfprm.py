@@ -8,6 +8,7 @@ from parmed.amber import parameters
 import xml.etree.ElementTree as ET
 from nifty import printcool_dictionary
 import argparse
+import re
 import IPython
 
 parser = argparse.ArgumentParser(description='convert A99SB-FB15 xml to A99SB-FB15 CHARMM format')
@@ -296,6 +297,13 @@ CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
+def find_all_indices(str_l, keys):
+    indices = []
+    for i, ele in enumerate(str_l):
+        if ele in keys:
+            indices.append(i)
+    return indices
+
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
@@ -315,13 +323,23 @@ def RewritePRM(prm):
                     # substitute old AT with new
                     for p_line in relevant_lines:
                         new_line = lines[p_line]
-                        l = new_line.split()
-                        at_replace = set([x for x in l if x in old_at])
+                        # add FB comment
+                        new_line = new_line.replace('!', '!  FB')
+                        # preserve white space
+                        l = re.split(r'(\s+)', new_line)
+                        # get indices of what needs to be replaced
+                        at_replace = find_all_indices(l, old_at)
                         for swap in at_replace:
-                            new_line = new_line.replace(swap, newAC)
-                        of.write(new_line.replace('! ', '!  FB '))
+                            # TODO: handle if old and new AC are of variable length
+                            l[swap] = newAC
+                            of.write(''.join(l))
+                            l = re.split(r'(\s+)', new_line)
                 section = None
                 of.write(line)
+                ## write new dihedral params
+                #else:
+                #    for newDih in  DihPrm_new:
+                #        DihPrm_new = list(set(A99SBFB_DihPrm.keys()) - set(A99SB_DihPrm.keys()))
             # store line numbers of lines concerning old ATs
             else:
                 if bool(set(s) & set(old_at)):
@@ -342,11 +360,8 @@ def RewritePRM(prm):
                     if s[5] != str(mult):
                         continue
                     else:
-                        print l
                         geo_old, phi_old = dih_old[mult]
                         geo_new, phi_new = dih_new[mult]
-                        print format_param(geo_old, 5), format_param(geo_new, 5)
-                        print format_param(phi_old, 10), format_param(phi_new, 10)
                         line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
                         line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
         elif len(s) > 0:
@@ -356,4 +371,4 @@ def RewritePRM(prm):
         of.write(line)
 RewritePRM(CPRM)
 
-IPython.embed()
+# IPython.embed()
