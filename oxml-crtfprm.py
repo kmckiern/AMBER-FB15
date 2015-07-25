@@ -327,30 +327,45 @@ def sub_existing(s, line):
             line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
             line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
     return line
+# consistent white space
+def format_quart(quart):
+    goal_width = 14
+    formatted = []
+    for i in quart:
+        if len(i) == 1:
+            formatted.append(i + '   ')
+        if len(i) == 2:
+            formatted.append(i + '  ')
+    return ''.join(formatted)
 # if AC quartet is new, sub terms from a similar reference line
 # assume split into terms, without whitespace
 def add_dihed(new_quart, ref_line):
-    new_line = ref_line.split()[:7]
+    nq = format_quart(new_quart)
+    old_quart = tuple(ref_line.split()[:4])
+    oq = format_quart(old_quart)
+    new_line = ref_line.replace(oq, nq)
+    new_line = new_line.replace('!', '! FB NEW')
     for mult in A99SBFB_DihPrm[new_quart]:
         min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
         min_geo = format_param(min_geo, 5)
         k_phi = format_param(k_phi, 10)
-        for ndx, val in enumerate(new_line):
-             # replace ACs
-             if ndx < 4:
-                 sub = new_quart[ndx]
-             # replace force constant
-             elif ndx == 5: 
-                 sub = k_phi
-             elif ndx == 6:
-                 sub = str(mult)
-             elif ndx == 7:
-                 sub = min_geo
-             new_line[ndx] = sub
-    new_line.append('! FB NEW')
-    subbed = ' '.join(new_line)
-    print subbed
-    return subbed
+        sub_line = new_line.split()[:6]
+        for ndx, val in enumerate(sub_line):
+            # replace ACs
+            if ndx < 4:
+                continue
+            # replace force constant
+            elif ndx == 4: 
+                sub = k_phi
+            elif ndx == 5:
+                sub = str(mult)
+            elif ndx == 6:
+                sub = min_geo
+            print 'meh', val, sub
+            new_line = new_line.replace(val, sub)
+            print '?', new_line
+        print new_line
+        return new_line
 
 CPRM = args.prm
 # Parse PRM
@@ -390,10 +405,14 @@ def RewritePRM(prm):
                                 of.write(''.join(new_line_sub))
                                 l = re.split(r'(\s+)', new_line)
                 else:
+                    # pick arbitrary line of convenient length for substitution
+                    for rl in relevant_lines:
+                        if len(lines[rl].split()) == 8:
+                            reference = lines[rl]
+                            break
                     for new_dih in DihPrm_new:
-                        reference = lines[relevant_lines[-1]]
                         line = add_dihed(new_dih, reference)
-                        print >>of, line
+                        of.write(line)
                 section = None
                 of.write(line)
             # store line numbers of lines with old ACs
