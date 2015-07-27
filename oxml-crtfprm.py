@@ -264,7 +264,7 @@ def RewriteRTF(rtf, lines):
                 sub_line = lines[at_lines[RevMap[new_at]]]
                 updated = sub_line.replace(RevMap[new_at], new_at)
                 orig_anum = sub_line.split()[1]
-                updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB')
+                updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB15')
                 of.write(updated)
                 n_mass += 1
         elif line.startswith('RESI'):
@@ -283,15 +283,6 @@ STEP 2: rewrite CHARMM prm file
 - append each section with new atom classes
 - add in new torsional quartet parameters
 """
-# for formatting dihedral params
-def format_param(param, c_len):
-    f = str(param)
-    if len(f) < c_len:
-        return f.ljust(c_len, '0')[:c_len]
-    if len(f) == c_len:
-        return f
-    else:
-        return str(round(param, c_len))[:c_len]
 # for finding string indicies for a list of keys
 def find_all_indices(str_l, keys):
     indices = []
@@ -299,6 +290,22 @@ def find_all_indices(str_l, keys):
         if ele in keys:
             indices.append(i)
     return indices
+# for formatting dihedral params
+def format_param(param, c_len):
+    param = float(param)
+    f = str(param)
+    if len(f) < c_len:
+        return f.ljust(c_len, '0')[:c_len]
+    if len(f) == c_len:
+        return f[:c_len]
+    else:
+        return str(round(param, c_len))[:c_len]
+# for when ACs have different lengths
+def format_ac(ac):
+    if len(ac) == 1:
+        return ac + ' '
+    else:
+        return ac
 # for substituting dihedral parameters
 def get_dquart(s, param_keys):
     dih_quart = tuple(s[:4])
@@ -310,48 +317,27 @@ def get_dquart(s, param_keys):
         else:
             dih_quart = dih_quart_r
     return dih_quart
-# substitute new torsional parameters for existing ACs
-def sub_existing(s, line):
-    dih_quart = get_dquart(s, A99SB_DihPrm.keys())
-    if dih_quart == None:
-        return line
-    dih_old = A99SB_DihPrm[dih_quart]
-    dih_new = A99SBFB_DihPrm[dih_quart]
-    for mult in dih_old.keys():
-        # TODO: handle extra multiplicities
-        if s[5] != str(mult):
-            continue
-        else:
-            geo_old, phi_old = dih_old[mult]
-            geo_new, phi_new = dih_new[mult]
-            line = line.replace(format_param(geo_old, 5), format_param(geo_new, 5))
-            line = line.replace(format_param(phi_old, 10), format_param(phi_new, 10))
-    return line
-# consistent white space
 def format_quart(quart):
     goal_width = 14
     formatted = []
     for i in quart:
-        if len(i) == 1:
-            formatted.append(i + '   ')
-        if len(i) == 2:
-            formatted.append(i + '  ')
+        formatted.append(format_ac(i) + '  ')
     return ''.join(formatted)
 # if AC quartet is new, sub terms from a similar reference line
-# assume split into terms, without whitespace
-def add_dihed(new_quart, ref_line):
+def add_dihed(new_quart, ref_line, append_comment=False):
     nq = format_quart(new_quart)
     old_quart = tuple(ref_line.split()[:4])
     oq = format_quart(old_quart)
     new_line = ref_line.replace(oq, nq)
-    new_line = new_line.replace('!', '! FB NEW')
+    if append_comment:
+        new_line = new_line.replace('!', '!  FB15 NEW')
     for mult in A99SBFB_DihPrm[new_quart]:
         min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
         min_geo = format_param(min_geo, 5)
         k_phi = format_param(k_phi, 10)
-        sub_line = new_line.split()[:6]
+        sub_line = new_line.split()[:7]
         for ndx, val in enumerate(sub_line):
-            # replace ACs
+            # already replaced ACs above
             if ndx < 4:
                 continue
             # replace force constant
@@ -361,11 +347,14 @@ def add_dihed(new_quart, ref_line):
                 sub = str(mult)
             elif ndx == 6:
                 sub = min_geo
-            print 'meh', val, sub
             new_line = new_line.replace(val, sub)
-            print '?', new_line
-        print new_line
         return new_line
+# substitute new torsional parameters for existing ACs
+def sub_existing(s, line):
+    dih_quart = get_dquart(s, A99SB_DihPrm.keys())
+    if dih_quart == None:
+        return line
+    return add_dihed(dih_quart, line)
 
 CPRM = args.prm
 # Parse PRM
@@ -386,33 +375,28 @@ def RewritePRM(prm):
         if section != None:
             # append new AC params to end of section
             if len(s) == 0:
-                if section != 'PHI':
-                    for newAC in new_at:
-                        # substitute old AT with new
-                        for p_line in relevant_lines:
-                            new_line = lines[p_line]
-                            # add FB comment
-                            new_line = new_line.replace('!', '!  FB')
-                            # preserve white space
+                for newAC in new_at:
+                    # substitute old AT with new
+                    for p_line in relevant_lines:
+                        new_line = lines[p_line]
+                        # add FB comment
+                        new_line = new_line.replace('!', '!  FB15')
+                        # preserve white space
+                        l = re.split(r'(\s+)', new_line)
+                        # get indices of what needs to be replaced
+                        at_replace = find_all_indices(l, old_at)
+                        # TODO: use AA graphs to remove superfluous dihedral specifications
+                        for swap in at_replace:
+                            l[swap] = format_ac(newAC)
+                            new_line_sub = ''.join(l)
+                            of.write(''.join(new_line_sub))
                             l = re.split(r'(\s+)', new_line)
-                            # get indices of what needs to be replaced
-                            at_replace = find_all_indices(l, old_at)
-                            # TODO: use AA graphs to remove superfluous dihedral specifications
-                            for swap in at_replace:
-                                # TODO: handle if old and new AC are of variable length
-                                l[swap] = newAC
-                                new_line_sub = ''.join(l)
-                                of.write(''.join(new_line_sub))
-                                l = re.split(r'(\s+)', new_line)
-                else:
-                    # pick arbitrary line of convenient length for substitution
-                    for rl in relevant_lines:
-                        if len(lines[rl].split()) == 8:
-                            reference = lines[rl]
-                            break
+                if section == 'PHI':
+                    # pick arbitrary line for substitution
+                    reference = lines[relevant_lines[-1]]
                     for new_dih in DihPrm_new:
-                        line = add_dihed(new_dih, reference)
-                        of.write(line)
+                        sub_line = add_dihed(new_dih, reference, True)
+                        of.write(sub_line)
                 section = None
                 of.write(line)
             # store line numbers of lines with old ACs
