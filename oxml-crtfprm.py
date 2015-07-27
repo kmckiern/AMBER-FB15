@@ -108,14 +108,64 @@ CType99 = {"C*": "CS", "N*": "NS"}
 AResOnly = ['LYN', 'ASH']
 CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
 
-def xml_torsions(xml_parsed):
+def sub_key(key, reference_dict):
+    ref_keys = reference_dict.keys()
+    # alter key so it has the CHARMM standard
+    if len(set(key).intersection(ref_keys)) > 0:
+        new_keys = []
+        for AC in key:
+            if AC in ref_keys:
+                new_keys.append(reference_dict[AC])
+            else:
+                new_keys.append(AC)
+        return tuple(new_keys)
+    else:
+        return key
+def xml_parameters(xml_parsed):
     root = xml_parsed.getroot()
     # maps
+    XBondPrm = OrderedDict()
+    XAnglePrm = OrderedDict()
     XDihPrm = OrderedDict()
     XImpPrm = OrderedDict()
     Params = parameters.ParameterSet()
     # populate maps
     for force in root:
+        # Harmonic bond parameters
+        if force.tag == 'HarmonicBondForce':
+            for elem in force:
+                att = elem.attrib
+                BC = (att['class1'], att['class2'])
+                BCr = (att['class2'], att['class1'])
+                acij = tuple(sorted(BC))
+                acij = sub_key(acij, CType99)
+                if acij in XBondPrm:
+                    print acij, "already defined in XBondPrm"
+                    raise RuntimeError
+                b = float(att['length'])*10
+                k = float(att['k'])/10/10/2/4.184
+                XBondPrm[acij] = (b, k)
+                # Pass information to ParmEd
+                Params._add_bond(acij[0], acij[1], rk=k, req=b)
+        # Harmonic angle parameters.  Same as for harmonic bonds.
+        if force.tag == 'HarmonicAngleForce':
+            for elem in force:
+                att = elem.attrib
+                AC = (att['class1'], att['class2'], att['class3'])
+                ACr = (att['class3'], att['class2'], att['class1'])
+                if AC[2] >= AC[0]:
+                    acijk = tuple(AC)
+                else:
+                    acijk = tuple(ACr)
+                acijk = sub_key(acijk, CType99)
+                if acijk in XAnglePrm:
+                    print acijk, "already defined in XAnglePrm"
+                    raise RuntimeError
+                t = float(att['angle'])*180/np.pi
+                k = float(att['k'])/2/4.184
+                XAnglePrm[acijk] = (t, k)
+                # Pass information to ParmEd
+                Params._add_angle(acijk[0], acijk[1], acijk[2], thetk=k, theteq=t)
         # Periodic torsion parameters.
         if force.tag == 'PeriodicTorsionForce':
             for elem in force:
@@ -165,15 +215,7 @@ def xml_torsions(xml_parsed):
                     if acijkl in XDihPrm:
                         print acijkl, "already defined in XDihPrm"
                         raise RuntimeError
-                    # alter key so it has the CHARMM standard
-                    if len(set(acijkl).intersection(CType99.keys())) > 0:
-                        chrm_acijkl = []
-                        for AC in acijkl:
-                            if AC in CType99.keys():
-                                chrm_acijkl.append(CType99[AC])
-                            else:
-                                chrm_acijkl.append(AC)
-                        acijkl = tuple(chrm_acijkl)
+                    acijkl = sub_key(acijkl, CType99)
                     XDihPrm[acijkl] = dprms
                     # New Params object can't write frcmod files.
                     # Params.dihedral_types[acijkl] = dihedral_list
@@ -191,16 +233,22 @@ def xml_torsions(xml_parsed):
                     raise RuntimeError
         else:
             continue
-    return XDihPrm, XImpPrm, Params
+    return XBondPrm, XAnglePrm, XDihPrm
 
-A99SB_DihPrm, A99SB_ImpPrm, A99SB_Params = xml_torsions(A99SB)
+A99SB_BondPrm, A99SB_AnglePrm, A99SB_DihPrm = xml_parameters(A99SB)
 A99SBFB = ET.parse(args.ambfbxml)
-A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_Params = xml_torsions(A99SBFB)
+A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm = xml_parameters(A99SBFB)
 
-# get elements in A99SBFB_DihPrm not present in A99SB_DihPrm
-DihPrm_new = list(set(A99SBFB_DihPrm.keys()) - set(A99SB_DihPrm.keys()))
-# also get overlapping keys
-DihPrm_overlap = list(set(A99SBFB_DihPrm.keys()) - set(DihPrm_new))
+# get elements in A99SBFB_*Prm not present in A99SB_*Prm
+def prm_diff(prm_dict_new, prm_dict_old):
+    new_params = list(set(prm_dict_new.keys()) - set(prm_dict_old.keys()))
+    # run thru symmetric difference to make sure it's truly new and not a substitution
+    for np in new_params:
+        if sub_key(np, RevMap) in prm_dict_old.keys():
+            new_params.remove(np)
+    return new_params
+
+DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -360,9 +408,9 @@ def add_dihed(new_quart, ref_line, append_comment=False, preserve_quart=False):
                 val = ' ' + val + ' '
                 sub = ' ' + sub + ' '
                 ref_line = ref_line.replace(val, sub)
-        return ref_line
+        return ref_line, nq
 # substitute new torsional parameters for existing ACs
-def sub_existing(s, line):
+def sub_existing_dihed(s, line):
     dih_quart = get_dquart(s, A99SB_DihPrm.keys())
     if dih_quart == None:
         return line
@@ -376,10 +424,9 @@ def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
     section = None
-    # section: (number of ACs, parameter precisions)
-    param_types = {'BONDS': (2, 5, 5), 'THETAS': (3, 4, 6), 'PHI': (4, 10, 1, 5),
-        'IMPHI': (4, 4, 1, 5), 'NONBONDED': (1, 3, 9, 8, 3, 10, 8)}
-    sections = param_types.keys()
+    np = {'BONDS': 2, 'THETAS': 3, 'PHI': 4, 'IMPHI': 4, 'NONBONDED': 1}
+    sections = np.keys()
+    written = None
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
         if line.startswith('!'):
@@ -404,31 +451,46 @@ def RewritePRM(prm):
                         for swap in at_replace:
                             l[swap] = format_ac(newAC)
                             new_line_sub = ''.join(l)
-                            of.write(new_line_sub)
+                            quart = tuple(new_line_sub.split()[:4])
+                            if quart not in written:
+                                written.append(quart)
+                                of.write(new_line_sub)
                             l = re.split(r'(\s+)', new_line)
                 # add completely new dihedral parms
                 if section == 'PHI':
                     # pick arbitrary line for substitution
                     reference = lines[relevant_lines[-1]]
                     for new_dih in DihPrm_new:
-                        sub_line = add_dihed(new_dih, reference, True, True)
-                        of.write(sub_line)
+                        sub_line, quart = add_dihed(new_dih, reference, True, True)
+                        if quart not in written:
+                            written.append(quart)
+                            of.write(sub_line)
                 section = None
+                # spacing between sections
                 of.write(line)
             # store line numbers of lines with old ACs
             else:
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
+                if written != None:
+                    ACs = tuple(line.split()[:np[section]])
+                    if ACs not in written:
+                        written.append(ACs)
+                    else:
+                        continue
             # if dihedral params, look up new param values
             if section == 'PHI':
-                sub_line = sub_existing(s, line)
+                sub_line, ACs = sub_existing_dihed(s, line)
                 line = sub_line
                 # global substitution (useful for adding new entries)
                 lines[ln] = sub_line
         elif len(s) > 0:
             if s[0] in sections:
                 section = s[0]
+                # record lines with old ACs
                 relevant_lines = []
+                # record written params to avoid duplicates
+                written = []
         of.write(line)
 RewritePRM(CPRM)
 
