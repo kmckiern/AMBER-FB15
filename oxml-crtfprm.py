@@ -275,7 +275,7 @@ def RewriteRTF(rtf, lines):
             if an in NewAC[RID].keys():
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
-RewriteRTF(CRTF, l_rtf)
+# RewriteRTF(CRTF, l_rtf)
 
 """
 STEP 2: rewrite CHARMM prm file
@@ -283,6 +283,9 @@ STEP 2: rewrite CHARMM prm file
 - append each section with new atom classes
 - add in new torsional quartet parameters
 """
+# stolen from LP
+def almostequal(i, j, tol):
+    return np.abs(i-j) < tol
 # for finding string indicies for a list of keys
 def find_all_indices(str_l, keys):
     indices = []
@@ -290,12 +293,15 @@ def find_all_indices(str_l, keys):
         if ele in keys:
             indices.append(i)
     return indices
-# for formatting dihedral params
-def format_param(param, c_len):
+# for formatting params
+def format_param(param, c_len, padding):
     param = float(param)
     f = str(param)
     if len(f) < c_len:
-        return f.ljust(c_len, '0')[:c_len]
+        if padding == '0':
+            return f.ljust(c_len, padding)[:c_len]
+        elif padding == ' ':
+            return f.rjust(c_len, padding)[:c_len]
     if len(f) == c_len:
         return f[:c_len]
     else:
@@ -318,24 +324,24 @@ def get_dquart(s, param_keys):
             dih_quart = dih_quart_r
     return dih_quart
 def format_quart(quart):
-    goal_width = 14
     formatted = []
     for i in quart:
         formatted.append(format_ac(i) + '  ')
     return ''.join(formatted)
 # if AC quartet is new, sub terms from a similar reference line
-def add_dihed(new_quart, ref_line, append_comment=False):
+def add_dihed(new_quart, ref_line, append_comment=False, preserve_quart=False):
     nq = format_quart(new_quart)
     old_quart = tuple(ref_line.split()[:4])
     oq = format_quart(old_quart)
-    new_line = ref_line.replace(oq, nq)
+    if preserve_quart:
+        ref_line = ref_line.replace(oq, nq)
     if append_comment:
-        new_line = new_line.replace('!', '!  FB15 NEW')
+        ref_line = ref_line.replace('!', '!  FB15 NEW')
     for mult in A99SBFB_DihPrm[new_quart]:
         min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
-        min_geo = format_param(min_geo, 5)
-        k_phi = format_param(k_phi, 10)
-        sub_line = new_line.split()[:7]
+        min_geo = format_param(min_geo, 5, '0')
+        k_phi = format_param(k_phi, 10, '0')
+        sub_line = ref_line.split()[:7]
         for ndx, val in enumerate(sub_line):
             # already replaced ACs above
             if ndx < 4:
@@ -347,14 +353,20 @@ def add_dihed(new_quart, ref_line, append_comment=False):
                 sub = str(mult)
             elif ndx == 6:
                 sub = min_geo
-            new_line = new_line.replace(val, sub)
-        return new_line
+            # don't replace if unnecessary
+            if not almostequal(float(val), float(sub), 1e-8):
+                if len(val) < len(sub):
+                    val = format_param(val, len(sub), ' ')
+                val = ' ' + val + ' '
+                sub = ' ' + sub + ' '
+                ref_line = ref_line.replace(val, sub)
+        return ref_line
 # substitute new torsional parameters for existing ACs
 def sub_existing(s, line):
     dih_quart = get_dquart(s, A99SB_DihPrm.keys())
     if dih_quart == None:
         return line
-    return add_dihed(dih_quart, line)
+    return add_dihed(dih_quart, line, preserve_quart=True)
 
 CPRM = args.prm
 # Parse PRM
@@ -364,7 +376,10 @@ def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
     section = None
-    sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
+    # section: (number of ACs, parameter precisions)
+    param_types = {'BONDS': (2, 5, 5), 'THETAS': (3, 4, 6), 'PHI': (4, 10, 1, 5),
+        'IMPHI': (4, 4, 1, 5), 'NONBONDED': (1, 3, 9, 8, 3, 10, 8)}
+    sections = param_types.keys()
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
         if line.startswith('!'):
@@ -375,13 +390,13 @@ def RewritePRM(prm):
         if section != None:
             # append new AC params to end of section
             if len(s) == 0:
+                # substitute old AC with new
                 for newAC in new_at:
-                    # substitute old AT with new
                     for p_line in relevant_lines:
                         new_line = lines[p_line]
                         # add FB comment
                         new_line = new_line.replace('!', '!  FB15')
-                        # preserve white space
+                        # preserve whitespace
                         l = re.split(r'(\s+)', new_line)
                         # get indices of what needs to be replaced
                         at_replace = find_all_indices(l, old_at)
@@ -389,13 +404,14 @@ def RewritePRM(prm):
                         for swap in at_replace:
                             l[swap] = format_ac(newAC)
                             new_line_sub = ''.join(l)
-                            of.write(''.join(new_line_sub))
+                            of.write(new_line_sub)
                             l = re.split(r'(\s+)', new_line)
+                # add completely new dihedral parms
                 if section == 'PHI':
                     # pick arbitrary line for substitution
                     reference = lines[relevant_lines[-1]]
                     for new_dih in DihPrm_new:
-                        sub_line = add_dihed(new_dih, reference, True)
+                        sub_line = add_dihed(new_dih, reference, True, True)
                         of.write(sub_line)
                 section = None
                 of.write(line)
@@ -416,4 +432,4 @@ def RewritePRM(prm):
         of.write(line)
 RewritePRM(CPRM)
 
-# IPython.embed()
+IPython.embed()
