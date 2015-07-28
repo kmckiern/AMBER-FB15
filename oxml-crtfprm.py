@@ -235,7 +235,9 @@ def xml_parameters(xml_parsed):
             continue
     return XBondPrm, XAnglePrm, XDihPrm
 
+# Create maps from parameter atom class tuples to parameter values
 A99SB_BondPrm, A99SB_AnglePrm, A99SB_DihPrm = xml_parameters(A99SB)
+
 A99SBFB = ET.parse(args.ambfbxml)
 A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm = xml_parameters(A99SBFB)
 
@@ -258,12 +260,15 @@ STEP 1: rewrite CHARMM rtf file
 - write out file
     - add new masses for each new atom type
     - replace atom type with new atom classes
+
+CAtAm: map from atom types to atom masses
+CAnAt: map from Atom names to atom types, indexed my residue
 """
+
 CRTF = args.rtf
-# atom types to atom masses
 CAtAm = OrderedDict()
-# atom name to atom type, per residue
 CAnAt = OrderedDict()
+
 def ParseRTF(rtf):
     # read in original rft
     lines = open(rtf).readlines()
@@ -285,7 +290,9 @@ def ParseRTF(rtf):
             spec, An, At, ACharge = s
             CAnAt[AA][An] = At
     return lines
+
 l_rtf = ParseRTF(CRTF)
+
 def RewriteRTF(rtf, lines):
     # open new rtf for writing
     of = open(rtf + '.new', 'w+')
@@ -323,6 +330,7 @@ def RewriteRTF(rtf, lines):
             if an in NewAC[RID].keys():
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
+
 # RewriteRTF(CRTF, l_rtf)
 
 """
@@ -331,175 +339,247 @@ STEP 2: rewrite CHARMM prm file
 - append each section with new atom classes
 - add in new torsional quartet parameters
 """
-# stolen from LP
-def almostequal(i, j, tol):
-    return np.abs(i-j) < tol
-# for finding string indicies for a list of keys
+## handy functions ##
+# for finding string indices for a list of keys
 def find_all_indices(str_l, keys):
     indices = []
     for i, ele in enumerate(str_l):
         if ele in keys:
             indices.append(i)
     return indices
-# for formatting params
+# stolen from LP
+def almostequal(i, j, tol):
+    return np.abs(i-j) < tol
+
+## formatting functions ##
+# format parameter to a desired precision
 def format_param(param, c_len, padding):
     param = float(param)
     f = str(param)
     if len(f) < c_len:
-        # right pad with zeros
         if padding == '0':
             return f.ljust(c_len, padding)[:c_len]
-        # left pad with spaces
         elif padding == ' ':
             return f.rjust(c_len, padding)[:c_len]
     if len(f) == c_len:
         return f[:c_len]
     else:
         return str(round(param, c_len))[:c_len]
-# for when ACs have different lengths
+# for when ACs have variable lengths
 def format_AC(AC):
     if len(AC) == 1:
         return AC + ' '
     else:
         return AC
-def format_ACs(key, spacing):
-    formatted = []
-    for i in key:
-        key_formatted = format_AC(i)
-        for space in range(spacing):
-            key_formatted += ' '
-    return ''.join(formatted)
-# for substituting parameters
-def param_query(s, num_AC, param_keys):
-    ACs = tuple(s[:num_AC])
-    # check if forward or reverse tuple are in reference dict
-    if ACs not in param_keys:
-        ACs_r = tuple(list(ACs)[::-1])
-        if ACs_r not in param_keys:
-            AC_update = None
+# given set of ACs, find ordering in parameter dict
+def order_ACs(param_tuple, param_dict):
+    pd_keys = param_dict.keys()
+    if param_tuple not in pd_keys:
+        pt_reverse = tuple(list(param_tuple)[::-1])
+        if pt_reverse not in pd_keys:
+            # discretionarily ignore some parameter tuples
+            print """Parameter tuple not found in parameter dictionary:  
+                %s""" % ' '.join(param_tuple)
+            return None
         else:
-            AC_update = ACs_r
-    else:
-        AC_update = ACs
-    return ACs, AC_update
-# if AC quartet is new, sub terms from a similar reference line
-def add_dihed(new_quart, ref_line, append_comment=False, preserve_quart=False):
-    for mult in A99SBFB_DihPrm[new_quart]:
-        min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
-        min_geo = format_param(min_geo, 5, '0')
-        k_phi = format_param(k_phi, 10, '0')
-        sub_line = ref_line.split()[:7]
-        for ndx, val in enumerate(sub_line):
-            # already replaced ACs above
-            if ndx < 4:
-                continue
-            # replace force constant
-            elif ndx == 4: 
-                sub = k_phi
-            elif ndx == 5:
-                sub = str(mult)
-            elif ndx == 6:
-                sub = min_geo
-            # don't replace if unnecessary
-            if not almostequal(float(val), float(sub), 1e-8):
-                if len(val) < len(sub):
-                    val = format_param(val, len(sub), ' ')
-                val = ' ' + val + ' '
-                sub = ' ' + sub + ' '
-                ref_line = ref_line.replace(val, sub)
-        return ref_line, nq
-# substitute new torsional parameters for existing ACs
-def sub_existing(s, line, section):
-    num_AC, info_dict, spaces = alter[section]
-    old_ACs, new_ACs = param_query(s, num_AC, info_dict.keys())
-    if new_ACs == None:
-        return line, ACs
-    f_new = format_ACs(new_ACs, spaces)
-    f_old = format_ACs(old_ACs, spaces)
-    if preserve_quart:
-        ref_line = ref_line.replace(oq, nq)
-    if append_comment:
-        ref_line = ref_line.replace('!', '!  FB15 NEW')
-    return add_dihed(dih_quart, line, preserve_quart=True)
+            param_tuple = pt_reverse
+    return param_tuple
+# format tuple of ACs into properly formatted string
+def AC_string(param_tuple, spacing):
+    AC_string = []
+    for param in param_tuple:
+        for space in range(spacing):
+            param += ' '
+        AC_string.append(param)
+    return ''.join(AC_string)
 
-CPRM = args.prm
+## Parameter replacement functions ##
+# format force constant and equilibrium length/angle parameters
+def fc_eq(section, new_p, pad):
+    k_i, eq_i = new_p
+    k_p, eq_eq = section_data[section][-1]
+    k_i = format_param(k_i, k_p, pad)
+    eq_i = format_param(eq_i, eq_p, pad)
+    return k_i, eq_i
+
+# given a line, substitute a value for a substitute
+def sub_val(line, val, sub):
+    # don't replace if unnecessary
+    if not almostequal(float(val), float(sub), 1e-8):
+        if len(val) < len(sub):
+            val = format_param(val, len(sub), ' ')
+        # pad so that replace doesn't sub any substrings
+        val = ' ' + val + ' '
+        sub = ' ' + sub + ' '
+        line = line.replace(val, sub)
+    return line
+
+# updates bond and angle parameters
+def update_ba(line, section, new_p):
+    k, eq = fc_eq(section, new_p, ' ')
+    line_iter = line.split()[:4]
+    for ndx, val in enumerate(line_iter):
+        if ndx < 2:
+            continue
+        # force constant
+        elif ndx == 2:
+            sub = k
+        elif ndx == 3:
+            sub = eq
+        else:
+            continue
+        line = sub_val(line, val, sub)
+    return line
+
+# updates dihedral parameters
+def update_dihed(line, section, new_p):
+    k, eq = fc_eq(section, reverse(new_p), '0')
+    line_iter = ref_line.split()[:7]
+    for ndx, val in enumerate(line_iter):
+        if ndx < 4:
+            continue
+        # force constant
+        elif ndx == 4: 
+            sub = k
+        # multiplicity
+        elif ndx == 5:
+            sub = str(mult)
+        # minimum geometry
+        elif ndx == 6:
+            sub = eq
+        line = sub_val(ref_line, val, sub)
+    return line
+
+# wrapper function
+def update_parameters(line, section, new_p):
+    # update comment
+    line = line.replace('!', '!  FB15 ')
+    # make sure np order matches precision specification in section_info
+    print new_p
+    if section == 'BONDS' or section == 'THETAS':
+        line = [update_ba(line, section, new_p)]
+    elif section == 'PHI':
+        line = []
+        for mult in new_p:
+            line.append(update_dihed(line, section, new_p[mult]))
+    return line
+
+# parameter type: (number of parameters, spacing between parameters,
+#      (equilibrium *, force constant))
+section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (4, 6)), 'PHI': (4, 2, (10, 5)), 
+    'IMPHI': (4, 2, (4, 5)), 'NONBONDED': (1, 0, (10))}
+sections = section_data.keys()
+# parameters with modified values
+orig_params = {'BONDS': A99SB_BondPrm, 'THETAS': A99SB_AnglePrm, 
+    'PHI': A99SB_DihPrm}
+modified = orig_params.keys()
+# map old parameter dicts to new param dicts
+new_params = {'BONDS': A99SBFB_BondPrm, 'THETAS': A99SBFB_AnglePrm, 
+    'PHI': A99SBFB_DihPrm}
+
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
-
-# section: (number of parameters, parameter dictionary, spacing btwn ACs)
-alter = {'PHI': (4, A99SB_DihPrm, 2)}#[''PHI'BONDS', 'THETAS', 'PHI']
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
-    written = None
+
+    # track current section, initilize parameter values, and write record
     section = None
-    sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
+    p_0, p_f = (None, None)
+    written = None
+
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
         if line.startswith('!'):
             of.write(line)
             continue
+
         l = line.split('!')[0].strip()
         s = l.split()
         if section != None:
-            # append new AC params to end of section
-            if len(s) == 0:
-                # substitute old AC with new
-                for newAC in new_at:
-                    for p_line in relevant_lines:
-                        new_line = lines[p_line]
-                        # add FB comment
-                        new_line = new_line.replace('!', '!  FB15')
-                        # preserve whitespace
-                        l = re.split(r'(\s+)', new_line)
-                        # get indices of what needs to be replaced
-                        at_replace = find_all_indices(l, old_at)
-                        # TODO: use AA graphs to remove superfluous dihedral specifications
-                        for swap in at_replace:
-                            l[swap] = format_AC(newAC)
-                            new_line_sub = ''.join(l)
-                            quart = tuple(new_line_sub.split()[:4])
-                            if quart not in written:
-                                written.append(quart)
-                                of.write(new_line_sub)
-                            l = re.split(r'(\s+)', new_line)
-                # add completely new dihedral params
-                if section == 'PHI':
-                    # pick arbitrary line for substitution
-                    reference = lines[relevant_lines[-1]]
-                    for new_dih in DihPrm_new:
-                        sub_line, quart = add_dihed(new_dih, reference, True, True)
-                        if quart not in written:
-                            written.append(quart)
-                            of.write(sub_line)
-                section = None
-                # spacing between sections
-                of.write(line)
-            # store line numbers of lines with old ACs
-            else:
+            # read through params, replace if needed
+            if len(s) > 0:
+                param_tuple = tuple(s[:num_params])
+                # if old AC is witnessed, save line number
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
-                if written != None:
-                    ACs = tuple(line.split()[:4])#alter[section][0]])
-                    if ACs not in written:
-                        written.append(ACs)
-                    else:
-                        continue
-            # if bond, angle, or dihedral params, look up and replace new param values
-            if section in alter:
-                sub_line, ACs = sub_existing(s, line, section)
-                line = sub_line
-                # global substitution (useful for adding new entries later)
-                lines[ln] = sub_line
+                # write nonbonded parameters and continue
+                if p_f == None:
+                    of.write(line)
+                    continue
+                # get correct order for substitution
+                param_tuple = order_ACs(param_tuple, p_0)
+                # update parameter values
+                if param_tuple == None:
+                    of.write(line)
+                else:
+                    new_p = p_f[param_tuple]
+                    lines = update_parameters(line, section, new_p)
+                    for line in lines:
+                        of.write(line)
+
+            # append new AC params to end of section
+            elif len(s) == 0:
+                # substitute old AC with new
+                for new_AC in new_at:
+                    AC = format_AC(new_AC)
+                    for AC_line in relevant_lines:
+                        ref_line = lines[AC_line]
+                        line = ref_line.split('!')[0].split()
+                        # get indices of what needs to be replaced
+                        AC_replace = find_all_indices(line, old_at)
+                        for swap in AC_replace:
+                            # replace old AC with new
+                            line = sub_val(ref_line, line[swap], AC)
+                            param_tuple = tuple(line.split()[:num_params])
+                            param_tuple = order_ACs(param_tuple, p_0)
+                            if param_tuple in p_f:
+                                new_p = p_f[param_tuple]
+                                # replace params
+                                lines = update_parameters(line, section, new_p)
+                                for line in lines:
+                                    of.write(line)
+
+                # add completely new param specs
+                remaining_ptups = symm_diffs[section]
+                for ptup in remaining_ptups:
+                    # pick arbitrary line for substitution
+                    line = lines[relevant_lines[-1]]
+                    # replaces all of the ACs
+                    line_ls = line.split('!')[0].split()
+                    param_tuple = line_ls[:num_params]
+                    AC_old = AC_string(param_tuple, param_spacing)
+                    AC_new = AC_string(ptup, param_spacing)
+                    line = line.replace(AC_old, AC_new)
+                    new_p = p_f[ptup]
+                    # replace params
+                    lines = update_parameters(line, section, new_p)
+                    for line in lines:
+                        of.write(line)
+
+                # reinitialize tracker variables for next section
+                section = None
+                p_0, p_f = (None, None)
+                written = None
+                # write spacing between sections
+                of.write(line)
+
         elif len(s) > 0:
             if s[0] in sections:
                 section = s[0]
-                # record lines with old ACs
+                # record lines where we see old ACs
                 relevant_lines = []
                 # record written params to avoid duplicates
                 written = []
+                # record section information
+                num_params, param_spacing, param_precision = section_data[section]
+                if section in modified:
+                    p_0 = orig_params[section]
+                    p_f = new_params[section]
         of.write(line)
+
+CPRM = args.prm
 RewritePRM(CPRM)
 
 IPython.embed()
