@@ -346,8 +346,10 @@ def format_param(param, c_len, padding):
     param = float(param)
     f = str(param)
     if len(f) < c_len:
+        # right pad with zeros
         if padding == '0':
             return f.ljust(c_len, padding)[:c_len]
+        # left pad with spaces
         elif padding == ' ':
             return f.rjust(c_len, padding)[:c_len]
     if len(f) == c_len:
@@ -355,36 +357,33 @@ def format_param(param, c_len, padding):
     else:
         return str(round(param, c_len))[:c_len]
 # for when ACs have different lengths
-def format_ac(ac):
-    if len(ac) == 1:
-        return ac + ' '
+def format_AC(AC):
+    if len(AC) == 1:
+        return AC + ' '
     else:
-        return ac
-# for substituting dihedral parameters
-def get_dquart(s, param_keys):
-    dih_quart = tuple(s[:4])
-    if dih_quart not in param_keys:
-        # sometimes the ordering is backwards
-        dih_quart_r = tuple(list(dih_quart)[::-1])
-        if dih_quart_r not in param_keys:
-            return None
-        else:
-            dih_quart = dih_quart_r
-    return dih_quart
-def format_quart(quart):
+        return AC
+def format_ACs(key, spacing):
     formatted = []
-    for i in quart:
-        formatted.append(format_ac(i) + '  ')
+    for i in key:
+        key_formatted = format_AC(i)
+        for space in range(spacing):
+            key_formatted += ' '
     return ''.join(formatted)
+# for substituting parameters
+def param_query(s, num_AC, param_keys):
+    ACs = tuple(s[:num_AC])
+    # check if forward or reverse tuple are in reference dict
+    if ACs not in param_keys:
+        ACs_r = tuple(list(ACs)[::-1])
+        if ACs_r not in param_keys:
+            AC_update = None
+        else:
+            AC_update = ACs_r
+    else:
+        AC_update = ACs
+    return ACs, AC_update
 # if AC quartet is new, sub terms from a similar reference line
 def add_dihed(new_quart, ref_line, append_comment=False, preserve_quart=False):
-    nq = format_quart(new_quart)
-    old_quart = tuple(ref_line.split()[:4])
-    oq = format_quart(old_quart)
-    if preserve_quart:
-        ref_line = ref_line.replace(oq, nq)
-    if append_comment:
-        ref_line = ref_line.replace('!', '!  FB15 NEW')
     for mult in A99SBFB_DihPrm[new_quart]:
         min_geo, k_phi = A99SBFB_DihPrm[new_quart][mult]
         min_geo = format_param(min_geo, 5, '0')
@@ -410,23 +409,32 @@ def add_dihed(new_quart, ref_line, append_comment=False, preserve_quart=False):
                 ref_line = ref_line.replace(val, sub)
         return ref_line, nq
 # substitute new torsional parameters for existing ACs
-def sub_existing_dihed(s, line):
-    dih_quart = get_dquart(s, A99SB_DihPrm.keys())
-    if dih_quart == None:
-        return line
+def sub_existing(s, line, section):
+    num_AC, info_dict, spaces = alter[section]
+    old_ACs, new_ACs = param_query(s, num_AC, info_dict.keys())
+    if new_ACs == None:
+        return line, ACs
+    f_new = format_ACs(new_ACs, spaces)
+    f_old = format_ACs(old_ACs, spaces)
+    if preserve_quart:
+        ref_line = ref_line.replace(oq, nq)
+    if append_comment:
+        ref_line = ref_line.replace('!', '!  FB15 NEW')
     return add_dihed(dih_quart, line, preserve_quart=True)
 
 CPRM = args.prm
 # Parse PRM
 # determine which atom class quartets receive
 # the sidechain-specific dihedral parameters.
+
+# section: (number of parameters, parameter dictionary, spacing btwn ACs)
+alter = {'PHI': (4, A99SB_DihPrm, 2)}#[''PHI'BONDS', 'THETAS', 'PHI']
 def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
-    section = None
-    np = {'BONDS': 2, 'THETAS': 3, 'PHI': 4, 'IMPHI': 4, 'NONBONDED': 1}
-    sections = np.keys()
     written = None
+    section = None
+    sections = ['BONDS', 'THETAS', 'PHI', 'IMPHI', 'NONBONDED']
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
         if line.startswith('!'):
@@ -449,14 +457,14 @@ def RewritePRM(prm):
                         at_replace = find_all_indices(l, old_at)
                         # TODO: use AA graphs to remove superfluous dihedral specifications
                         for swap in at_replace:
-                            l[swap] = format_ac(newAC)
+                            l[swap] = format_AC(newAC)
                             new_line_sub = ''.join(l)
                             quart = tuple(new_line_sub.split()[:4])
                             if quart not in written:
                                 written.append(quart)
                                 of.write(new_line_sub)
                             l = re.split(r'(\s+)', new_line)
-                # add completely new dihedral parms
+                # add completely new dihedral params
                 if section == 'PHI':
                     # pick arbitrary line for substitution
                     reference = lines[relevant_lines[-1]]
@@ -473,16 +481,16 @@ def RewritePRM(prm):
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
                 if written != None:
-                    ACs = tuple(line.split()[:np[section]])
+                    ACs = tuple(line.split()[:4])#alter[section][0]])
                     if ACs not in written:
                         written.append(ACs)
                     else:
                         continue
-            # if dihedral params, look up new param values
-            if section == 'PHI':
-                sub_line, ACs = sub_existing_dihed(s, line)
+            # if bond, angle, or dihedral params, look up and replace new param values
+            if section in alter:
+                sub_line, ACs = sub_existing(s, line, section)
                 line = sub_line
-                # global substitution (useful for adding new entries)
+                # global substitution (useful for adding new entries later)
                 lines[ln] = sub_line
         elif len(s) > 0:
             if s[0] in sections:
