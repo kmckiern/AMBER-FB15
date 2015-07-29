@@ -123,14 +123,41 @@ def sub_key(key, reference_dict):
         return key
 def xml_parameters(xml_parsed):
     root = xml_parsed.getroot()
-    # maps
-    XBondPrm = OrderedDict()
-    XAnglePrm = OrderedDict()
-    XDihPrm = OrderedDict()
-    XImpPrm = OrderedDict()
+    
+    # OpenMM Atom Types to Atom Class
+    OAtAc = OrderedDict()
+    
+    # OpenMM Atom Classes to Masses
+    OAcMass = OrderedDict()
+    
+    # OpenMM Residue-Atom Names to Atom Class
+    AA_OAc = OrderedDict()
+    
+    # OpenMM Atom Class to Parameter Mapping
+    # (vdW sigma and epsilon in AKMA)
+    ONbPrm = OrderedDict()
+    OBondPrm = OrderedDict()
+    OAnglePrm = OrderedDict()
+    ODihPrm = OrderedDict()
+    OImpPrm = OrderedDict()
+    
     Params = parameters.ParameterSet()
-    # populate maps
+    
+    # Stage 1 processing: Read in force field parameters
     for force in root:
+        # Top-level tags in force field XML file are:
+        # Forces
+        # Atom types
+        # Residues
+        if force.tag == 'AtomTypes':
+            for elem in force:
+                OAtAc[elem.attrib['name']] = elem.attrib['class']
+                mass = float(elem.attrib['mass'])
+                if elem.attrib['class'] in OAcMass and mass != OAcMass[elem.attrib['class']]:
+                    print "Atom class mass not consistent"
+                    raise RuntimeError
+                OAcMass[elem.attrib['class']] = mass
+            # printcool_dictionary(OAtAc)
         # Harmonic bond parameters
         if force.tag == 'HarmonicBondForce':
             for elem in force:
@@ -138,15 +165,18 @@ def xml_parameters(xml_parsed):
                 BC = (att['class1'], att['class2'])
                 BCr = (att['class2'], att['class1'])
                 acij = tuple(sorted(BC))
-                acij = sub_key(acij, CType99)
-                if acij in XBondPrm:
-                    print acij, "already defined in XBondPrm"
+                if acij in OBondPrm:
+                    print acij, "already defined in OBndPrm"
                     raise RuntimeError
                 b = float(att['length'])*10
                 k = float(att['k'])/10/10/2/4.184
-                XBondPrm[acij] = (k, b)
+                # sub C* and N* for CS and NS
+                acij = sub_key(acij, CType99)
+                OBondPrm[acij] = (k, b)
                 # Pass information to ParmEd
                 Params._add_bond(acij[0], acij[1], rk=k, req=b)
+                # New Params object can't write frcmod files.
+                # Params.bond_types[acij] = pmd.BondType(k, b)
         # Harmonic angle parameters.  Same as for harmonic bonds.
         if force.tag == 'HarmonicAngleForce':
             for elem in force:
@@ -157,15 +187,17 @@ def xml_parameters(xml_parsed):
                     acijk = tuple(AC)
                 else:
                     acijk = tuple(ACr)
-                acijk = sub_key(acijk, CType99)
-                if acijk in XAnglePrm:
-                    print acijk, "already defined in XAnglePrm"
+                if acijk in OAnglePrm:
+                    print acijk, "already defined in OAnglePrm"
                     raise RuntimeError
                 t = float(att['angle'])*180/np.pi
                 k = float(att['k'])/2/4.184
-                XAnglePrm[acijk] = (k, t)
+                acijk = sub_key(acijk, CType99)
+                OAnglePrm[acijk] = (k, t)
                 # Pass information to ParmEd
                 Params._add_angle(acijk[0], acijk[1], acijk[2], thetk=k, theteq=t)
+                # New Params object can't write frcmod files.
+                # Params.angle_types[acijk] = pmd.AngleType(k, t)
         # Periodic torsion parameters.
         if force.tag == 'PeriodicTorsionForce':
             for elem in force:
@@ -212,34 +244,56 @@ def xml_parameters(xml_parsed):
                     Params._add_dihedral(acijkl[0], acijkl[1], acijkl[2], acijkl[3],
                                          pk=k, phase=f, periodicity=p, dihtype=dtyp)
                 if elem.tag == 'Proper':
-                    if acijkl in XDihPrm:
-                        print acijkl, "already defined in XDihPrm"
+                    if acijkl in ODihPrm:
+                        print acijkl, "already defined in ODihPrm"
                         raise RuntimeError
+                    # sub C* and N* for CS and NS
+                    acijkl_0 = acijkl
                     acijkl = sub_key(acijkl, CType99)
-                    XDihPrm[acijkl] = dprms
-                    # New Params object can't write frcmod files.
-                    # Params.dihedral_types[acijkl] = dihedral_list
+                    ODihPrm[acijkl] = dprms
+                    acijkl = acijkl_0
                 elif elem.tag == 'Improper':
-                    if acijkl in XImpPrm:
-                        print acijkl, "already defined in XImpPrm"
+                    if acijkl in OImpPrm:
+                        print acijkl, "already defined in OImpPrm"
                         raise RuntimeError
-                    XImpPrm[acijkl] = dprms
+                    acijkl_0 = acijkl
+                    acijkl = sub_key(acijkl, CType99)
+                    OImpPrm[acijkl] = dprms
+                    acijkl = acijkl_0
                     if len(dihedral_list) > 1:
                         print acijkl, "more than one interaction"
                         raise RuntimeError
-                    # New Params object can't write frcmod files.
-                    # Params.improper_periodic_types[acijkl] = dihedral_list[0]
                 else:
                     raise RuntimeError
-        else:
-            continue
-    return XBondPrm, XAnglePrm, XDihPrm
+        # Nonbonded parameters
+        if force.tag == 'NonbondedForce':
+            for elem in force:
+                sigma = float(elem.attrib['sigma'])*10
+                epsilon = float(elem.attrib['epsilon'])/4.184
+                atype = elem.attrib['type']
+                aclass = OAtAc[atype]
+                amass = OAcMass[aclass]
+                msigeps = (amass, sigma, epsilon)
+                if aclass in ONbPrm:
+                    if ONbPrm[aclass] != msigeps:
+                        print 'mass, sigma and epsilon for atom class %s not uniquely defined:' % aclass
+                        print msigeps, ONbPrm[aclass]
+                        raise RuntimeError
+                else:
+                    aclass = sub_key(aclass, CType99)
+                    ONbPrm[aclass] = (amass, sigma, epsilon)
+    
+        # Residue definitions
+        if force.tag == 'Residues':
+            resnode = force
+
+    return OBondPrm, OAnglePrm, ODihPrm, OImpPrm, ONbPrm
 
 # Create maps from parameter atom class tuples to parameter values
-A99SB_BondPrm, A99SB_AnglePrm, A99SB_DihPrm = xml_parameters(A99SB)
+A99SB_BondPrm, A99SB_AnglePrm, A99SB_DihPrm, A99SB_ImpPrm, A99SB_NbPrm = xml_parameters(A99SB)
 
 A99SBFB = ET.parse(args.ambfbxml)
-A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm = xml_parameters(A99SBFB)
+A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_NbPrm = xml_parameters(A99SBFB)
 
 # get elements in A99SBFB_*Prm not present in A99SB_*Prm
 def prm_diff(prm_dict_new, prm_dict_old):
@@ -250,9 +304,11 @@ def prm_diff(prm_dict_new, prm_dict_old):
             new_params.remove(np)
     return new_params
 
-DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
 BondPrm_new = prm_diff(A99SBFB_BondPrm, A99SB_BondPrm)
 AnglePrm_new = prm_diff(A99SBFB_AnglePrm, A99SB_AnglePrm)
+DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
+ImpPrm_new = prm_diff(A99SBFB_ImpPrm, A99SB_ImpPrm)
+NbPrm_new = prm_diff(A99SBFB_NbPrm, A99SB_NbPrm)
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -439,10 +495,10 @@ def update_ba(line, section, new_p, num_AC):
         line = sub_val(line, val, sub)
     return line
 
-# updates dihedral parameters
-def update_dihed(line, section, new_p, mult, num_AC):
+# updates dihedral and improper parameters
+def update_di(line, section, new_p, mult, num_AC):
     new_p = new_p[mult]
-    eq, k = fc_eq(section, new_p, '0')
+    k, eq = fc_eq(section, new_p, '0')
     line_iter = line.split()[:7]
     for ndx, val in enumerate(line_iter):
         if ndx < num_AC:
@@ -459,32 +515,54 @@ def update_dihed(line, section, new_p, mult, num_AC):
         line = sub_val(line, val, sub)
     return line
 
+# update nonbonded parameters
+def update_nb(line, section, new_p, num_AC):
+    return line + ' None'
+"""
+    k, eq = fc_eq(section, new_p, ' ')
+    line_iter = line.split()[:4]
+    for ndx, val in enumerate(line_iter):
+        if ndx < num_AC:
+            continue
+        # force constant
+        elif ndx == num_AC:
+            sub = k
+        elif ndx == num_AC + 1:
+            sub = eq
+        else:
+            continue
+        line = sub_val(line, val, sub)
+    return line
+"""
+
 # wrapper function
 def update_parameters(line, section, new_p, ptup):
     l_ptup = len(ptup)
     if section == 'BONDS' or section == 'THETAS':
         l = [update_ba(line, section, new_p, l_ptup)]
-    elif section == 'PHI':
+    elif section == 'PHI' or section == 'IMPHI':
         l = []
         for mult in new_p:
-            l.append(update_dihed(line, section, new_p, mult, l_ptup))
+            l.append(update_di(line, section, new_p, mult, l_ptup))
+    elif section == 'NONBONDED':
+        l = [update_nb(line, section, new_p, l_ptup)]
     return l
 
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
 section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (5, 6)), 'PHI': (4, 2, (10, 5)), 
-    'IMPHI': (4, 2, (4, 5)), 'NONBONDED': (1, 0, (10))}
+    'IMPHI': (4, 2, (4, 5)), 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))}
 sections = section_data.keys()
 # parameters with modified values
 orig_params = {'BONDS': A99SB_BondPrm, 'THETAS': A99SB_AnglePrm, 
-    'PHI': A99SB_DihPrm}
+    'PHI': A99SB_DihPrm, 'IMPHI': A99SB_ImpPrm, 'NONBONDED': A99SB_NbPrm}
 modified = orig_params.keys()
-# map old parameter dicts to new param dicts
+# map old bonded parameter dicts to new param dicts
 new_params = {'BONDS': A99SBFB_BondPrm, 'THETAS': A99SBFB_AnglePrm, 
-    'PHI': A99SBFB_DihPrm}
+    'PHI': A99SBFB_DihPrm, 'IMPHI': A99SBFB_ImpPrm, 'NONBONDED': A99SBFB_NbPrm}
 # map from section to exclusively unique new parameter values
 new_AC_params = {'BONDS': BondPrm_new, 'THETAS': AnglePrm_new, 
-    'PHI': DihPrm_new}
+    'PHI': DihPrm_new, 'IMPHI': ImpPrm_new, 'NONBONDED': NbPrm_new}
 
 # Parse PRM
 # determine which atom class quartets receive
@@ -537,15 +615,13 @@ def RewritePRM(prm):
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
+                    line = line.replace('!*')
                     # replaces all of the ACs
                     line_ls = line.split('!')[0].split()
                     param_tuple = tuple(line_ls[:num_params])
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
                     line = line.replace(AC_old, AC_new)
-                    if meh:
-                        # IPython.embed()
-                        meh = False
                     new_p = p_f[ptup]
                     # replace params
                     ls = update_parameters(line, section, new_p, ptup)
@@ -569,9 +645,8 @@ def RewritePRM(prm):
                 written = []
                 # record section information
                 num_params, param_spacing, param_precision = section_data[section]
-                if section in modified:
-                    p_0 = orig_params[section]
-                    p_f = new_params[section]
+                p_0 = orig_params[section]
+                p_f = new_params[section]
 
         else:
             of.write(line)
