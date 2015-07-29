@@ -388,10 +388,13 @@ def order_ACs(param_tuple, param_dict):
     return param_tuple
 # format tuple of ACs into properly formatted string
 def AC_string(param_tuple, spacing):
+    np = len(param_tuple)
     AC_string = []
-    for param in param_tuple:
-        for space in range(spacing):
-            param += ' '
+    for p, param in enumerate(param_tuple):
+        param = format_AC(param)
+        if p < np-1:
+            for space in range(spacing):
+                param += ' '
         AC_string.append(param)
     return ''.join(AC_string)
 
@@ -420,16 +423,16 @@ def sub_val(line, val, sub):
     return line
 
 # updates bond and angle parameters
-def update_ba(line, section, new_p):
+def update_ba(line, section, new_p, num_AC):
     k, eq = fc_eq(section, new_p, ' ')
     line_iter = line.split()[:4]
     for ndx, val in enumerate(line_iter):
-        if ndx < 2:
+        if ndx < num_AC:
             continue
         # force constant
-        elif ndx == 2:
+        elif ndx == num_AC:
             sub = k
-        elif ndx == 3:
+        elif ndx == num_AC + 1:
             sub = eq
         else:
             continue
@@ -437,37 +440,39 @@ def update_ba(line, section, new_p):
     return line
 
 # updates dihedral parameters
-def update_dihed(line, section, new_p):
+def update_dihed(line, section, new_p, mult, num_AC):
+    new_p = new_p[mult]
     eq, k = fc_eq(section, new_p, '0')
-    line_iter = ref_line.split()[:7]
+    line_iter = line.split()[:7]
     for ndx, val in enumerate(line_iter):
-        if ndx < 4:
+        if ndx < num_AC:
             continue
         # force constant
-        elif ndx == 4: 
+        elif ndx == num_AC: 
             sub = k
         # multiplicity
-        elif ndx == 5:
+        elif ndx == num_AC + 1:
             sub = str(mult)
         # minimum geometry
-        elif ndx == 6:
+        elif ndx == num_AC + 2:
             sub = eq
-        line = sub_val(ref_line, val, sub)
+        line = sub_val(line, val, sub)
     return line
 
 # wrapper function
-def update_parameters(line, section, new_p):
+def update_parameters(line, section, new_p, ptup):
+    l_ptup = len(ptup)
     if section == 'BONDS' or section == 'THETAS':
-        line = [update_ba(line, section, new_p)]
+        l = [update_ba(line, section, new_p, l_ptup)]
     elif section == 'PHI':
-        line = []
+        l = []
         for mult in new_p:
-            line.append(update_dihed(line, section, new_p[mult]))
-    return line
+            l.append(update_dihed(line, section, new_p, mult, l_ptup))
+    return l
 
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
-section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (4, 6)), 'PHI': (4, 2, (10, 5)), 
+section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (5, 6)), 'PHI': (4, 2, (10, 5)), 
     'IMPHI': (4, 2, (4, 5)), 'NONBONDED': (1, 0, (10))}
 sections = section_data.keys()
 # parameters with modified values
@@ -478,7 +483,7 @@ modified = orig_params.keys()
 new_params = {'BONDS': A99SBFB_BondPrm, 'THETAS': A99SBFB_AnglePrm, 
     'PHI': A99SBFB_DihPrm}
 # map from section to exclusively unique new parameter values
-new_params = {'BONDS': BondPrm_new, 'THETAS': AnglePrm_new, 
+new_AC_params = {'BONDS': BondPrm_new, 'THETAS': AnglePrm_new, 
     'PHI': DihPrm_new}
 
 # Parse PRM
@@ -495,6 +500,8 @@ def RewritePRM(prm):
 
     lines = open(prm).readlines()
     for ln, line in enumerate(lines):
+        ref_line = line
+
         if line.startswith('!'):
             of.write(line)
             continue
@@ -519,39 +526,15 @@ def RewritePRM(prm):
                     of.write(line)
                 else:
                     new_p = p_f[param_tuple]
-                    ls = update_parameters(line, section, new_p)
-                    for line in ls:
-                        of.write(line)
+                    ls = update_parameters(line, section, new_p, param_tuple)
+                    for l in ls:
+                        of.write(l)
 
             # append new AC params to end of section
             elif len(s) == 0:
-                # substitute old AC with new
-                for new_AC in new_at:
-                    AC = format_AC(new_AC)
-                    for AC_line in relevant_lines:
-                        line = lines[AC_line]
-                        line_ls = line.split('!')[0].split()
-                        orig_AC = AC_string(tuple(line_ls[:num_params]), param_spacing)
-                        # get indices of what needs to be replaced
-                        AC_replace = find_all_indices(line_ls, old_at)
-                        for swap in AC_replace:
-                            # replace old AC with new
-                            line_ls[swap] = AC
-                            param_tuple = tuple(line_ls[:num_params])
-                            param_tuple = order_ACs(param_tuple, p_f)
-                            if param_tuple in p_f:
-                                new_AC = AC_string(param_tuple, param_spacing)
-                                line_upd8 = line.replace(orig_AC, new_AC)
-                                new_p = p_f[param_tuple]
-                                # replace params
-                                ls = update_parameters(line_upd8, section, new_p)
-                                for l in ls:
-                                    of.write(l)
-
-                """
-                # add completely new param specs
-                remaining_ptups = symm_diffs[section]
-                for ptup in remaining_ptups:
+                meh = True
+                AC_append = new_AC_params[section]
+                for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
                     # replaces all of the ACs
@@ -560,19 +543,21 @@ def RewritePRM(prm):
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
                     line = line.replace(AC_old, AC_new)
+                    if meh:
+                        # IPython.embed()
+                        meh = False
                     new_p = p_f[ptup]
                     # replace params
-                    lines = update_parameters(line, section, new_p)
-                    for line in lines:
-                        of.write(line)
-                """
+                    ls = update_parameters(line, section, new_p, ptup)
+                    for l in ls:
+                        of.write(l)
 
                 # reinitialize tracker variables for next section
                 section = None
                 p_0, p_f = (None, None)
                 written = None
                 # write spacing between sections
-                of.write(line)
+                of.write(ref_line)
 
         elif len(s) > 0:
             of.write(line)
