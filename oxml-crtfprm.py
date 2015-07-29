@@ -251,6 +251,8 @@ def prm_diff(prm_dict_new, prm_dict_old):
     return new_params
 
 DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
+BondPrm_new = prm_diff(A99SBFB_BondPrm, A99SB_BondPrm)
+AnglePrm_new = prm_diff(A99SBFB_AnglePrm, A99SB_AnglePrm)
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -475,6 +477,9 @@ modified = orig_params.keys()
 # map old parameter dicts to new param dicts
 new_params = {'BONDS': A99SBFB_BondPrm, 'THETAS': A99SBFB_AnglePrm, 
     'PHI': A99SBFB_DihPrm}
+# map from section to exclusively unique new parameter values
+new_params = {'BONDS': BondPrm_new, 'THETAS': AnglePrm_new, 
+    'PHI': DihPrm_new}
 
 # Parse PRM
 # determine which atom class quartets receive
