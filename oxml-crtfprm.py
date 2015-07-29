@@ -280,7 +280,6 @@ def xml_parameters(xml_parsed):
                         print msigeps, ONbPrm[aclass]
                         raise RuntimeError
                 else:
-                    aclass = sub_key(aclass, CType99)
                     ONbPrm[aclass] = (amass, sigma, epsilon)
     
         # Residue definitions
@@ -383,7 +382,7 @@ def RewriteRTF(rtf, lines):
                 sub_line = lines[at_lines[RevMap[new_at]]]
                 updated = sub_line.replace(RevMap[new_at], new_at)
                 orig_anum = sub_line.split()[1]
-                updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB15')
+                updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB15 ')
                 of.write(updated)
                 n_mass += 1
         elif line.startswith('RESI'):
@@ -442,8 +441,8 @@ def order_ACs(param_tuple, param_dict):
         pt_reverse = tuple(list(param_tuple)[::-1])
         if pt_reverse not in pd_keys:
             # discretionarily ignore some parameter tuples
-            print """Parameter tuple not found in parameter dictionary:  
-                %s""" % ' '.join(param_tuple)
+            # print """Parameter tuple not found in parameter dictionary:  
+            #     %s""" % ' '.join(param_tuple)
             return None
         else:
             param_tuple = pt_reverse
@@ -521,23 +520,24 @@ def update_di(line, section, new_p, mult, num_AC):
         line = sub_val(line, val, sub)
     return line
 
-# update nonbonded parameters
-def update_nb(line, section, new_p, num_AC):
-    IPython.embed()
-    k, eq = nb_params(linesection, new_p, ' ')
-    line_iter = line.split()[:4]
-    for ndx, val in enumerate(line_iter):
-        if ndx < num_AC:
-            continue
-        # force constant
-        elif ndx == num_AC:
-            sub = k
-        elif ndx == num_AC + 1:
-            sub = eq
-        else:
-            continue
-        line = sub_val(line, val, sub)
-    return line
+# check nonbonded parameters
+def check_nb(line, section, new_p, num_AC):
+    l = line.split()
+    # new params
+    mass, sig, eps = new_p
+    # convert to CHARMM convention
+    sig = sig*(2.0**(1.0/6.0))/2.0
+    # old params
+    o_eps = -1.0 * float(l[2])
+    o_sig = float(l[6])
+    if almostequal(sig, o_sig, 1e-8) and almostequal(eps, o_eps, 1e-8):
+        return line
+    else:
+        print """Nonbonded parameters do not match for line
+            %s""" % line
+        print "Old parameters: %s, %s " % (o_sig, o_eps)
+        print "New parameters: %s, %s " % (sig, eps)
+        raise RuntimeError
 
 # wrapper function
 def update_parameters(line, section, new_p, ptup):
@@ -549,7 +549,7 @@ def update_parameters(line, section, new_p, ptup):
         for mult in new_p:
             l.append(update_di(line, section, new_p, mult, l_ptup))
     elif section == 'NONBONDED':
-        l = [update_nb(line, section, new_p, l_ptup)]
+        l = [check_nb(line, section, new_p, l_ptup)]
     return l
 
 # parameter type: (number of parameters, spacing between parameters,
@@ -597,20 +597,20 @@ def RewritePRM(prm):
                 # if old AC is witnessed, save line number
                 if bool(set(s) & set(old_at)):
                     relevant_lines.append(ln)
-                # write nonbonded parameters and continue
-                if p_f == None:
-                    of.write(line)
-                    continue
                 # get correct order for substitution
                 param_tuple = order_ACs(param_tuple, p_0)
                 # update parameter values
                 if param_tuple == None:
+                    if section == 'NONBONDED':
+                        if s[0] in CType99:
+                            line = line.replace(s[0], CType99[s[0]])
                     of.write(line)
                 else:
                     new_p = p_f[param_tuple]
                     ls = update_parameters(line, section, new_p, param_tuple)
                     for l in ls:
                         of.write(l)
+
 
             # append new AC params to end of section
             elif len(s) == 0:
@@ -619,8 +619,9 @@ def RewritePRM(prm):
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
-                    line = line.split('!')[0] + '! \r\n'
-                    # replaces all of the ACs
+                    # remove comment
+                    line = line.split('!')[0] + '!  FB15 \r\n'
+                    # replace all of the ACs
                     line_ls = line.split()
                     param_tuple = tuple(line_ls[:num_params])
                     AC_old = AC_string(param_tuple, param_spacing)
