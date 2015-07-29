@@ -144,7 +144,7 @@ def xml_parameters(xml_parsed):
                     raise RuntimeError
                 b = float(att['length'])*10
                 k = float(att['k'])/10/10/2/4.184
-                XBondPrm[acij] = (b, k)
+                XBondPrm[acij] = (k, b)
                 # Pass information to ParmEd
                 Params._add_bond(acij[0], acij[1], rk=k, req=b)
         # Harmonic angle parameters.  Same as for harmonic bonds.
@@ -163,7 +163,7 @@ def xml_parameters(xml_parsed):
                     raise RuntimeError
                 t = float(att['angle'])*180/np.pi
                 k = float(att['k'])/2/4.184
-                XAnglePrm[acijk] = (t, k)
+                XAnglePrm[acijk] = (k, t)
                 # Pass information to ParmEd
                 Params._add_angle(acijk[0], acijk[1], acijk[2], thetk=k, theteq=t)
         # Periodic torsion parameters.
@@ -397,7 +397,7 @@ def AC_string(param_tuple, spacing):
 # format force constant and equilibrium length/angle parameters
 def fc_eq(section, new_p, pad):
     k_i, eq_i = new_p
-    k_p, eq_eq = section_data[section][-1]
+    k_p, eq_p = section_data[section][-1]
     k_i = format_param(k_i, k_p, pad)
     eq_i = format_param(eq_i, eq_p, pad)
     return k_i, eq_i
@@ -406,6 +406,9 @@ def fc_eq(section, new_p, pad):
 def sub_val(line, val, sub):
     # don't replace if unnecessary
     if not almostequal(float(val), float(sub), 1e-8):
+        if 'FB15' not in line:
+            # update comment
+            line = line.replace('!', '!  FB15 ')
         if len(val) < len(sub):
             val = format_param(val, len(sub), ' ')
         # pad so that replace doesn't sub any substrings
@@ -433,7 +436,7 @@ def update_ba(line, section, new_p):
 
 # updates dihedral parameters
 def update_dihed(line, section, new_p):
-    k, eq = fc_eq(section, reverse(new_p), '0')
+    eq, k = fc_eq(section, new_p, '0')
     line_iter = ref_line.split()[:7]
     for ndx, val in enumerate(line_iter):
         if ndx < 4:
@@ -452,10 +455,6 @@ def update_dihed(line, section, new_p):
 
 # wrapper function
 def update_parameters(line, section, new_p):
-    # update comment
-    line = line.replace('!', '!  FB15 ')
-    # make sure np order matches precision specification in section_info
-    print new_p
     if section == 'BONDS' or section == 'THETAS':
         line = [update_ba(line, section, new_p)]
     elif section == 'PHI':
@@ -515,8 +514,8 @@ def RewritePRM(prm):
                     of.write(line)
                 else:
                     new_p = p_f[param_tuple]
-                    lines = update_parameters(line, section, new_p)
-                    for line in lines:
+                    ls = update_parameters(line, section, new_p)
+                    for line in ls:
                         of.write(line)
 
             # append new AC params to end of section
@@ -525,22 +524,26 @@ def RewritePRM(prm):
                 for new_AC in new_at:
                     AC = format_AC(new_AC)
                     for AC_line in relevant_lines:
-                        ref_line = lines[AC_line]
-                        line = ref_line.split('!')[0].split()
+                        line = lines[AC_line]
+                        line_ls = line.split('!')[0].split()
+                        orig_AC = AC_string(tuple(line_ls[:num_params]), param_spacing)
                         # get indices of what needs to be replaced
-                        AC_replace = find_all_indices(line, old_at)
+                        AC_replace = find_all_indices(line_ls, old_at)
                         for swap in AC_replace:
                             # replace old AC with new
-                            line = sub_val(ref_line, line[swap], AC)
-                            param_tuple = tuple(line.split()[:num_params])
-                            param_tuple = order_ACs(param_tuple, p_0)
+                            line_ls[swap] = AC
+                            param_tuple = tuple(line_ls[:num_params])
+                            param_tuple = order_ACs(param_tuple, p_f)
                             if param_tuple in p_f:
+                                new_AC = AC_string(param_tuple, param_spacing)
+                                line_upd8 = line.replace(orig_AC, new_AC)
                                 new_p = p_f[param_tuple]
                                 # replace params
-                                lines = update_parameters(line, section, new_p)
-                                for line in lines:
-                                    of.write(line)
+                                ls = update_parameters(line_upd8, section, new_p)
+                                for l in ls:
+                                    of.write(l)
 
+                """
                 # add completely new param specs
                 remaining_ptups = symm_diffs[section]
                 for ptup in remaining_ptups:
@@ -548,7 +551,7 @@ def RewritePRM(prm):
                     line = lines[relevant_lines[-1]]
                     # replaces all of the ACs
                     line_ls = line.split('!')[0].split()
-                    param_tuple = line_ls[:num_params]
+                    param_tuple = tuple(line_ls[:num_params])
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
                     line = line.replace(AC_old, AC_new)
@@ -557,6 +560,7 @@ def RewritePRM(prm):
                     lines = update_parameters(line, section, new_p)
                     for line in lines:
                         of.write(line)
+                """
 
                 # reinitialize tracker variables for next section
                 section = None
@@ -566,6 +570,7 @@ def RewritePRM(prm):
                 of.write(line)
 
         elif len(s) > 0:
+            of.write(line)
             if s[0] in sections:
                 section = s[0]
                 # record lines where we see old ACs
@@ -577,7 +582,9 @@ def RewritePRM(prm):
                 if section in modified:
                     p_0 = orig_params[section]
                     p_f = new_params[section]
-        of.write(line)
+
+        else:
+            of.write(line)
 
 CPRM = args.prm
 RewritePRM(CPRM)
