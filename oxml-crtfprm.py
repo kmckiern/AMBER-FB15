@@ -299,9 +299,9 @@ A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_NbPrm
 def prm_diff(prm_dict_new, prm_dict_old):
     new_params = list(set(prm_dict_new.keys()) - set(prm_dict_old.keys()))
     # run thru symmetric difference to make sure it's truly new and not a substitution
-    for np in new_params:
-        if sub_key(np, RevMap) in prm_dict_old.keys():
-            new_params.remove(np)
+    for nprm in new_params:
+        if sub_key(nprm, RevMap) in prm_dict_old.keys():
+            new_params.remove(nprm)
     return new_params
 
 BondPrm_new = prm_diff(A99SBFB_BondPrm, A99SB_BondPrm)
@@ -309,6 +309,12 @@ AnglePrm_new = prm_diff(A99SBFB_AnglePrm, A99SB_AnglePrm)
 DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
 ImpPrm_new = prm_diff(A99SBFB_ImpPrm, A99SB_ImpPrm)
 NbPrm_new = prm_diff(A99SBFB_NbPrm, A99SB_NbPrm)
+
+# circuitous formating precaution
+for i, nb in enumerate(NbPrm_new):
+    reformat = tuple([nb])
+    A99SBFB_NbPrm[reformat] = A99SBFB_NbPrm[nb]
+    NbPrm_new[i] = reformat
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -444,11 +450,11 @@ def order_ACs(param_tuple, param_dict):
     return param_tuple
 # format tuple of ACs into properly formatted string
 def AC_string(param_tuple, spacing):
-    np = len(param_tuple)
+    n_param = len(param_tuple)
     AC_string = []
     for p, param in enumerate(param_tuple):
         param = format_AC(param)
-        if p < np-1:
+        if p < n_param-1:
             for space in range(spacing):
                 param += ' '
         AC_string.append(param)
@@ -517,9 +523,8 @@ def update_di(line, section, new_p, mult, num_AC):
 
 # update nonbonded parameters
 def update_nb(line, section, new_p, num_AC):
-    return line + ' None'
-"""
-    k, eq = fc_eq(section, new_p, ' ')
+    IPython.embed()
+    k, eq = nb_params(linesection, new_p, ' ')
     line_iter = line.split()[:4]
     for ndx, val in enumerate(line_iter):
         if ndx < num_AC:
@@ -533,7 +538,6 @@ def update_nb(line, section, new_p, num_AC):
             continue
         line = sub_val(line, val, sub)
     return line
-"""
 
 # wrapper function
 def update_parameters(line, section, new_p, ptup):
@@ -551,7 +555,7 @@ def update_parameters(line, section, new_p, ptup):
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
 section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (5, 6)), 'PHI': (4, 2, (10, 5)), 
-    'IMPHI': (4, 2, (4, 5)), 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))}
+    'IMPHI': (4, 2, (5, 5)), 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))}
 sections = section_data.keys()
 # parameters with modified values
 orig_params = {'BONDS': A99SB_BondPrm, 'THETAS': A99SB_AnglePrm, 
@@ -571,7 +575,7 @@ def RewritePRM(prm):
     # open new prm for writing
     of = open(prm + '.new', 'w+')
 
-    # track current section, initilize parameter values, and write record
+    # track current section, initialize parameter values, and write record
     section = None
     p_0, p_f = (None, None)
     written = None
@@ -615,9 +619,9 @@ def RewritePRM(prm):
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
-                    line = line.replace('!*')
+                    line = line.split('!')[0] + '! \r\n'
                     # replaces all of the ACs
-                    line_ls = line.split('!')[0].split()
+                    line_ls = line.split()
                     param_tuple = tuple(line_ls[:num_params])
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
@@ -654,4 +658,4 @@ def RewritePRM(prm):
 CPRM = args.prm
 RewritePRM(CPRM)
 
-IPython.embed()
+# IPython.embed()
