@@ -280,6 +280,7 @@ def xml_parameters(xml_parsed):
                         print msigeps, ONbPrm[aclass]
                         raise RuntimeError
                 else:
+                    aclass = tuple([aclass])
                     ONbPrm[aclass] = (amass, sigma, epsilon)
     
         # Residue definitions
@@ -297,10 +298,6 @@ A99SBFB_BondPrm, A99SBFB_AnglePrm, A99SBFB_DihPrm, A99SBFB_ImpPrm, A99SBFB_NbPrm
 # get elements in A99SBFB_*Prm not present in A99SB_*Prm
 def prm_diff(prm_dict_new, prm_dict_old):
     new_params = list(set(prm_dict_new.keys()) - set(prm_dict_old.keys()))
-    # run thru symmetric difference to make sure it's truly new and not a substitution
-    for nprm in new_params:
-        if sub_key(nprm, RevMap) in prm_dict_old.keys():
-            new_params.remove(nprm)
     return new_params
 
 BondPrm_new = prm_diff(A99SBFB_BondPrm, A99SB_BondPrm)
@@ -310,10 +307,10 @@ ImpPrm_new = prm_diff(A99SBFB_ImpPrm, A99SB_ImpPrm)
 NbPrm_new = prm_diff(A99SBFB_NbPrm, A99SB_NbPrm)
 
 # circuitous formating precaution
-for i, nb in enumerate(NbPrm_new):
-    reformat = tuple([nb])
-    A99SBFB_NbPrm[reformat] = A99SBFB_NbPrm[nb]
-    NbPrm_new[i] = reformat
+# for i, nb in enumerate(NbPrm_new):
+#     reformat = tuple([nb])
+#     A99SBFB_NbPrm[reformat] = A99SBFB_NbPrm[nb]
+#     NbPrm_new[i] = reformat
 
 """
 STEP 1: rewrite CHARMM rtf file
@@ -394,7 +391,7 @@ def RewriteRTF(rtf, lines):
                 line = line.replace(at, NewAC[RID][an])
         of.write(line)
 
-# RewriteRTF(CRTF, l_rtf)
+RewriteRTF(CRTF, l_rtf)
 
 """
 STEP 2: rewrite CHARMM prm file
@@ -486,7 +483,7 @@ def sub_val(line, val, sub):
 # updates bond and angle parameters
 def update_ba(line, section, new_p, num_AC):
     k, eq = fc_eq(section, new_p, ' ')
-    line_iter = line.split()[:4]
+    line_iter = line.split()[:len(new_p) + 3]
     for ndx, val in enumerate(line_iter):
         if ndx < num_AC:
             continue
@@ -533,11 +530,12 @@ def check_nb(line, section, new_p, num_AC):
     if almostequal(sig, o_sig, 1e-8) and almostequal(eps, o_eps, 1e-8):
         return line
     else:
+        # take note, I suppose
         print """Nonbonded parameters do not match for line
             %s""" % line
         print "Old parameters: %s, %s " % (o_sig, o_eps)
         print "New parameters: %s, %s " % (sig, eps)
-        raise RuntimeError
+        return line
 
 # wrapper function
 def update_parameters(line, section, new_p, ptup):
@@ -547,6 +545,11 @@ def update_parameters(line, section, new_p, ptup):
     elif section == 'PHI' or section == 'IMPHI':
         l = []
         for mult in new_p:
+            if 'Br  CT  CT  Br' in line:
+                if mult == 0: continue
+            if mult > 1:
+                if ptup[0] == 'X' and ptup[-1] == 'X':
+                    continue
             l.append(update_di(line, section, new_p, mult, l_ptup))
     elif section == 'NONBONDED':
         l = [check_nb(line, section, new_p, l_ptup)]
@@ -601,21 +604,23 @@ def RewritePRM(prm):
                 param_tuple = order_ACs(param_tuple, p_0)
                 # update parameter values
                 if param_tuple == None:
-                    if section == 'NONBONDED':
-                        if s[0] in CType99:
-                            line = line.replace(s[0], CType99[s[0]])
                     of.write(line)
                 else:
                     new_p = p_f[param_tuple]
                     ls = update_parameters(line, section, new_p, param_tuple)
                     for l in ls:
-                        of.write(l)
+                        data = tuple(l.split()[:num_params])
+                        # prevent duplicates
+                        if data not in written:
+                            of.write(l)
+                            written.append(data)
 
-
-            # append new AC params to end of section
             elif len(s) == 0:
-                meh = True
-                AC_append = new_AC_params[section]
+                # get a99sb params missing from borrowed prm file
+                missing = list(set(orig_params[section].keys()) - set(written))
+                # for unlisted in missing:
+                # append new AC params to end of section
+                AC_append = missing + new_AC_params[section]
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
@@ -624,14 +629,21 @@ def RewritePRM(prm):
                     # replace all of the ACs
                     line_ls = line.split()
                     param_tuple = tuple(line_ls[:num_params])
+                    print '``` ', section, ' ', param_tuple, ptup
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
                     line = line.replace(AC_old, AC_new)
-                    new_p = p_f[ptup]
+                    try:
+                        new_p = p_f[ptup]
+                    except:
+                        IPython.embed()
                     # replace params
                     ls = update_parameters(line, section, new_p, ptup)
                     for l in ls:
-                        of.write(l)
+                        data = tuple(l.split()[:num_params])
+                        if data not in written:
+                            of.write(l)
+                            written.append(data)
 
                 # reinitialize tracker variables for next section
                 section = None
@@ -658,5 +670,3 @@ def RewritePRM(prm):
 
 CPRM = args.prm
 RewritePRM(CPRM)
-
-# IPython.embed()
