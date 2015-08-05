@@ -415,7 +415,7 @@ def almostequal(i, j, tol):
 # format parameter to a desired precision
 def format_param(param, c_len, padding):
     param = float(param)
-    f = str(param)
+    f = '%f' % param
     if len(f) < c_len:
         if padding == '0':
             return f.ljust(c_len, padding)[:c_len]
@@ -518,23 +518,37 @@ def update_di(line, section, new_p, mult, num_AC):
     return line
 
 # check nonbonded parameters
-def check_nb(line, section, new_p, num_AC):
+def update_nb(line, section, new_p, num_AC):
     l = line.split()
     # new params
     mass, sig, eps = new_p
     # convert to CHARMM convention
     sig = sig*(2.0**(1.0/6.0))/2.0
     # old params
-    o_eps = -1.0 * float(l[2])
-    o_sig = float(l[6])
+    eps_0 = l[2]
+    sig_0 = l[6]
+    o_eps = -1.0 * float(eps_0)
+    o_sig = float(sig_0)
     if almostequal(sig, o_sig, 1e-8) and almostequal(eps, o_eps, 1e-8):
         return line
     else:
-        # take note, I suppose
+        # hopefully only needed for params not included in original prm file
         print """Nonbonded parameters do not match for line
             %s""" % line
         print "Old parameters: %s, %s " % (o_sig, o_eps)
         print "New parameters: %s, %s " % (sig, eps)
+        s, e = fc_eq(section, [sig, eps], '0')
+        e = '-' + e
+        for ndx, val in enumerate(l):
+            if ndx < num_AC:
+                continue
+            elif ndx == 2:
+                sub = e
+            elif ndx == 6:
+                sub = s
+            else:
+                continue
+            line = sub_val(line, val, sub)
         return line
 
 # wrapper function
@@ -552,13 +566,14 @@ def update_parameters(line, section, new_p, ptup):
                     continue
             l.append(update_di(line, section, new_p, mult, l_ptup))
     elif section == 'NONBONDED':
-        l = [check_nb(line, section, new_p, l_ptup)]
+        l = [update_nb(line, section, new_p, l_ptup)]
     return l
 
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
 section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (5, 6)), 'PHI': (4, 2, (10, 5)), 
-    'IMPHI': (4, 2, (5, 5)), 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))}
+    'IMPHI': (4, 2, (5, 5)), 'NONBONDED': (1, 0, (8, 8))}
+# 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))
 sections = section_data.keys()
 # parameters with modified values
 orig_params = {'BONDS': A99SB_BondPrm, 'THETAS': A99SB_AnglePrm, 
