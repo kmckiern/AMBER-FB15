@@ -552,18 +552,16 @@ def update_nb(line, section, new_p, num_AC):
         return line
 
 # wrapper function
-def update_parameters(line, section, new_p, ptup):
+def update_parameters(line, section, new_p, ptup, match_mult=True):
     l_ptup = len(ptup)
     if section == 'BONDS' or section == 'THETAS':
         l = [update_ba(line, section, new_p, l_ptup)]
     elif section == 'PHI' or section == 'IMPHI':
         l = []
         for mult in new_p:
-            # if 'Br  CT  CT  Br' in line:
-            #     if mult == 0: continue
-            # if mult > 1:
-            #     if ptup[0] == 'X' and ptup[-1] == 'X':
-            #         continue
+            if match_mult:
+                if line.split()[5] != str(mult):
+                    continue
             l.append(update_di(line, section, new_p, mult, l_ptup))
     elif section == 'NONBONDED':
         l = [update_nb(line, section, new_p, l_ptup)]
@@ -624,20 +622,17 @@ def RewritePRM(prm):
                     new_p = p_f[param_tuple]
                     ls = update_parameters(line, section, new_p, param_tuple)
                     for l in ls:
-                        data = tuple(l.split()[:num_params])
-                        data_r = tuple(reversed(l.split()[:num_params]))
+                        data = AC_string(tuple(l.split()[:num_params]), param_spacing)
+                        data_r = AC_string(tuple(reversed(l.split()[:num_params])), param_spacing)
+                        l_r = l.replace(data, data_r)
                         # prevent duplicates
-                        if data not in written:
+                        if l not in written:
                             of.write(l)
-                            written.append(data)
-                            written.append(data_r)
+                            written.append(l)
+                            written.append(l_r)
 
             elif len(s) == 0:
-                # get a99sb params missing from borrowed prm file
-                # missing = list(set(orig_params[section].keys()) - set(written))
-                # for unlisted in missing:
                 # append new AC params to end of section
-                # AC_append = missing + new_AC_params[section]
                 AC_append = new_AC_params[section]
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
@@ -652,7 +647,7 @@ def RewritePRM(prm):
                     line = line.replace(AC_old, AC_new)
                     new_p = p_f[ptup]
                     # replace params
-                    ls = update_parameters(line, section, new_p, ptup)
+                    ls = update_parameters(line, section, new_p, ptup, match_mult=False)
                     for l in ls:
                         data = tuple(l.split()[:num_params])
                         if data not in written:
