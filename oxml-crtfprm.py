@@ -415,7 +415,7 @@ def almostequal(i, j, tol):
 # format parameter to a desired precision
 def format_param(param, c_len, padding):
     param = float(param)
-    f = '%f' % param
+    f = str(param) # '%f' % param
     if len(f) < c_len:
         if padding == '0':
             return f.ljust(c_len, padding)[:c_len]
@@ -482,7 +482,7 @@ def sub_val(line, val, sub):
 
 # updates bond and angle parameters
 def update_ba(line, section, new_p, num_AC):
-    k, eq = fc_eq(section, new_p, ' ')
+    k, eq = fc_eq(section, new_p, '0')
     line_iter = line.split()[:len(new_p) + 3]
     for ndx, val in enumerate(line_iter):
         if ndx < num_AC:
@@ -559,11 +559,11 @@ def update_parameters(line, section, new_p, ptup):
     elif section == 'PHI' or section == 'IMPHI':
         l = []
         for mult in new_p:
-            if 'Br  CT  CT  Br' in line:
-                if mult == 0: continue
-            if mult > 1:
-                if ptup[0] == 'X' and ptup[-1] == 'X':
-                    continue
+            # if 'Br  CT  CT  Br' in line:
+            #     if mult == 0: continue
+            # if mult > 1:
+            #     if ptup[0] == 'X' and ptup[-1] == 'X':
+            #         continue
             l.append(update_di(line, section, new_p, mult, l_ptup))
     elif section == 'NONBONDED':
         l = [update_nb(line, section, new_p, l_ptup)]
@@ -571,8 +571,8 @@ def update_parameters(line, section, new_p, ptup):
 
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
-section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (5, 6)), 'PHI': (4, 2, (10, 5)), 
-    'IMPHI': (4, 2, (5, 5)), 'NONBONDED': (1, 0, (8, 8))}
+section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (4, 6)), 'PHI': (4, 2, (10, 5)), 
+    'IMPHI': (4, 2, (3, 5)), 'NONBONDED': (1, 0, (8, 8))}
 # 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))
 sections = section_data.keys()
 # parameters with modified values
@@ -625,17 +625,20 @@ def RewritePRM(prm):
                     ls = update_parameters(line, section, new_p, param_tuple)
                     for l in ls:
                         data = tuple(l.split()[:num_params])
+                        data_r = tuple(reversed(l.split()[:num_params]))
                         # prevent duplicates
                         if data not in written:
                             of.write(l)
                             written.append(data)
+                            written.append(data_r)
 
             elif len(s) == 0:
                 # get a99sb params missing from borrowed prm file
-                missing = list(set(orig_params[section].keys()) - set(written))
+                # missing = list(set(orig_params[section].keys()) - set(written))
                 # for unlisted in missing:
                 # append new AC params to end of section
-                AC_append = missing + new_AC_params[section]
+                # AC_append = missing + new_AC_params[section]
+                AC_append = new_AC_params[section]
                 for ptup in AC_append:
                     # pick arbitrary line for substitution
                     line = lines[relevant_lines[-1]]
@@ -644,14 +647,10 @@ def RewritePRM(prm):
                     # replace all of the ACs
                     line_ls = line.split()
                     param_tuple = tuple(line_ls[:num_params])
-                    print '``` ', section, ' ', param_tuple, ptup
                     AC_old = AC_string(param_tuple, param_spacing)
                     AC_new = AC_string(ptup, param_spacing)
                     line = line.replace(AC_old, AC_new)
-                    try:
-                        new_p = p_f[ptup]
-                    except:
-                        IPython.embed()
+                    new_p = p_f[ptup]
                     # replace params
                     ls = update_parameters(line, section, new_p, ptup)
                     for l in ls:
