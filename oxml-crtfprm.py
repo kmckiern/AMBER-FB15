@@ -661,26 +661,15 @@ def RewritePRM(prm):
                     new_p = p_f[ptup]
                     # replace params
                     ls = update_parameters(line, section, new_p, ptup)
-                    if section == 'PHI' and '6H' in ptup and 'X' in ptup:
-                        IPython.embed()
                     for i, l in enumerate(ls):
                         data = AC_string(tuple(l.split()[:num_params]), param_spacing)
                         data_r = AC_string(tuple(reversed(l.split()[:num_params])), param_spacing)
                         l_r = l.replace(data, data_r)
                         # prevent duplicates
                         if l not in written:
-                            if section == 'PHI':
-                                l_ls = l.split()
-                                l_mult = l_ls[5]
-                                mult_match = False
-                                for rl in rls:
-                                    rl_mult = rl.split()[5]
-                                    if l_mult == rl_mult:
-                                        mult_match = True
                             of.write(l)
                             written.append(l)
                             written.append(l_r)
-
                 # reinitialize tracker variables for next section
                 section = None
                 p_0, p_f = (None, None)
