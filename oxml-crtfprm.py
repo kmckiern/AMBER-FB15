@@ -635,8 +635,21 @@ def RewritePRM(prm):
                 # append new AC params to end of section
                 AC_append = new_AC_params[section]
                 for ptup in AC_append:
-                    # pick arbitrary line for substitution
+                    # default line is arbitrary
                     line = lines[relevant_lines[-1]]
+                    # pick convenient line for substitution, if possible
+                    forward = AC_string(ptup, param_spacing)
+                    backward = AC_string(ptup[::-1], param_spacing)
+                    for param in ptup:
+                        if len(set([param]) & set(RevMap.keys())) > 0:
+                            forward = forward.replace(param, RevMap[param])
+                            backward = backward.replace(param, RevMap[param])
+                    rls = []
+                    for rl in relevant_lines:
+                        check = lines[rl]
+                        if forward in check or backward in check:
+                            rls.append(check)
+                            line = check
                     # remove comment
                     line = line.split('!')[0] + '!  FB15 \r\n'
                     # replace all of the ACs
@@ -647,12 +660,26 @@ def RewritePRM(prm):
                     line = line.replace(AC_old, AC_new)
                     new_p = p_f[ptup]
                     # replace params
-                    ls = update_parameters(line, section, new_p, ptup, match_mult=False)
-                    for l in ls:
-                        data = tuple(l.split()[:num_params])
-                        if data not in written:
+                    ls = update_parameters(line, section, new_p, ptup)
+                    if section == 'PHI' and '6H' in ptup and 'X' in ptup:
+                        IPython.embed()
+                    for i, l in enumerate(ls):
+                        data = AC_string(tuple(l.split()[:num_params]), param_spacing)
+                        data_r = AC_string(tuple(reversed(l.split()[:num_params])), param_spacing)
+                        l_r = l.replace(data, data_r)
+                        # prevent duplicates
+                        if l not in written:
+                            if section == 'PHI':
+                                l_ls = l.split()
+                                l_mult = l_ls[5]
+                                mult_match = False
+                                for rl in rls:
+                                    rl_mult = rl.split()[5]
+                                    if l_mult == rl_mult:
+                                        mult_match = True
                             of.write(l)
-                            written.append(data)
+                            written.append(l)
+                            written.append(l_r)
 
                 # reinitialize tracker variables for next section
                 section = None
