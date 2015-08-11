@@ -88,7 +88,7 @@ def RTFAtomNames(rtf):
             answer.setdefault(AA, []).append((An, At, float(ACharge)))
     return answer
 # CHARMM rtf with residue definitions
-chrm_rtf = reporoot + '/Params/CHARMM/parm99_all.rtf'
+chrm_rtf = reporoot + '/Params/CHARMM/fb15.rtf'
 chrm_resatoms = RTFAtomNames(chrm_rtf)
 
 gmx_resnames = set(gmx_resatoms.keys())
@@ -125,12 +125,18 @@ for resname in sorted(list(gmx_resnames.intersection(chrm_resnames))):
 chrm_atomnames = OrderedDict([(k, set(v.keys())) for k, v in chrm_gmx_amap.items()])
 max_reslen = max([len(v) for v in chrm_atomnames.values()])
 
-# cprm = CharmmParameterSet('../Params/CHARMM/parm99SB_all.prm', '../Params/CHARMM/parm99_all.rtf')
-IPython.embed()
+pdb_in = sys.argv[1]
+# rewrite the gmx pdb using mdtraj
+_exec('python ~/scripts/manip_proteins/mdt_rewrite_pdb.py %s mdt_%s' % (pdb_in, pdb_in))
+
+# run pdb thru/chrm charmming
+_exec('python ~/local/charmming/parser_v3.py mdt_%s' % (pdb_in))
+
+cprm = CharmmParameterSet('../../Params/CHARMM/fb15.prm', '../../Params/CHARMM/fb15.rtf')
 
 # Begin with an AMBER-compatible PDB file
 # Please ensure by hand :)
-pdb = Molecule(sys.argv[1], build_topology=False)
+pdb = Molecule('mdt_' + pdb_in, build_topology=False)
 gmx_pdb = copy.deepcopy(pdb)
 del gmx_pdb.Data['elem']
 
@@ -185,27 +191,27 @@ for i in range(gmx_pdb.na):
 gmx_pdbfnm = os.path.splitext(sys.argv[1])[0]+"-gmx.pdb"
 gmx_pdb.write(gmx_pdbfnm)
 
-gmx_ffnames = {'fb15':'gmxfb15', 'fb15ni':'gmxfb15ni', 'ildn':'gmx99sb-ildn'}
-chrm_ffnames = {'fb15' : 'fb15', 'fb15ni':'fb15ni', 'ildn':'ff99SBildn'}
+gmx_ffnames = {'fb15':'amberfb15', 'fb15ni':'amberfb15ni', 'ildn':'amber99sb-ildn'}
+chrm_ffnames = {'fb15':'fb15', 'fb15ni':'fF15ni', 'ildn':'ff99SBildn'}
 # Set up the system in Gromacs
-_exec("pdb2gmx -ff %s -f %s" % (gmx_ffnames[args.ff], gmx_pdbfnm), stdin="1\n")
-
-# *** not sure how to make paths not hard code-y ***
-pdb_in = sys.argv[1]
+# _exec("pdb2gmx -ff %s -f %s" % (gmx_ffnames[args.ff], gmx_pdbfnm), stdin="1\n")
 
 # Set up the system in CHARMM
 chrm_outpdbfnm = os.path.splitext(pdb_in)[0]+"-chrm.pdb"
 
-# rewrite the gmx pdb using mdtraj
-_exec('python ~/scripts/manip_proteins/mdt_rewrite_pdb.py %s mdt_%s' % (pdb_in, pdb_in))
+# hack, for now, not how to best address
+_exec('sed -i "s/NA+/SOD/g" *pdb')
 
-# run pdb thru/chrm charmming
-_exec('python ~/local/charmming/parser_v3.py mdt_%s.pdb' % (pdb_in))
+# for each pdb segment, generate crd and psf
+for i in ['-a-pro', '-b-het']:
+    pdb_pref = pdb_in.split('.')[0] + i
 
-# run charmming protein pdb thru charmm
-with open('pro.inp', 'w') as f:
-    print >> f, """
-* Run Segment Through CHARMM
+    choice = chrm_ffnames[args.ff]
+    sys = 'new_mdt_' + pdb_pref + '.pdb'
+
+    # run charmming protein pdb thru charmm
+    with open(pdb_pref + '.inp', 'w') as f:
+        print >> f, """* Run Segment Through CHARMM
 *
 
 ! read topology and parameter files
@@ -214,7 +220,7 @@ read rtf card name "{choice}.rtf"
 read param card name "{choice}.prm"
 
 ! Read sequence from the PDB coordinate file
-open unit 1 card read name {pro_pdb}
+open unit 1 card read name {sys}
 read sequ pdb unit 1
 
 ! now generate the PSF and also the IC table (SETU keyword)
@@ -243,24 +249,22 @@ energy
 ! write out the protein structure file (psf) and
 ! the coordinate file in pdb and crd format.
 
-write psf card name {choice}-pro-final.psf
+write psf card name {sys}-final.psf
 * PSF
 *
 
-write coor card name {choice}-pro-final.crd
+write coor card name {sys}-final.crd
 * Coords
 *
 
 stop
 
-""".format(choice = chrm_ffnames[args.ff], 
-           pdbin = 'new_mdt_' + pdb_in + '-a-pro.pdb')
-_exec('~/src/c37b2/exec/gnu/charmm < pro.inp > pro.out')
+    """.format(choice = choice, sys = sys)
+    _exec('~/src/c37b2/exec/gnu/charmm < ' + pdb_pref + '.inp > ' + pdb_pref + '.out')
 
-# append water and hetatoms to charmm protein pdb
+# merge psfs and crds
 with open('append.inp', 'w') as f:
-    print >> f, """
-* Append the PDBs
+    print >> f, """* Append the PDBs
 *
 
 ! read topology and parameter files
@@ -295,7 +299,6 @@ stop
 """.format(choice = chrm_ffnames[args.ff], 
            pdbout = chrm_outpdbfnm)
 _exec('~/src/c37b2/exec/gnu/charmm < append.inp > append.out')
-# ******************************************************************
 
 # Load the GROMACS output coordinate file
 gmx_gro = Molecule("conf.gro", build_topology=False)
