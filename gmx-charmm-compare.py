@@ -132,7 +132,7 @@ _exec('python ~/scripts/manip_proteins/mdt_rewrite_pdb.py %s mdt_%s' % (pdb_in, 
 # run pdb thru/chrm charmming
 _exec('python ~/local/charmming/parser_v3.py mdt_%s' % (pdb_in))
 
-cprm = CharmmParameterSet('../../Params/CHARMM/fb15.prm', '../../Params/CHARMM/fb15.rtf')
+cprm = CharmmParameterSet('fb15.prm', 'fb15.rtf')
 
 # Begin with an AMBER-compatible PDB file
 # Please ensure by hand :)

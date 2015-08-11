@@ -223,7 +223,7 @@ MASS  56  IP 22.99   ! assumed to be Na+ (ion plus)
 MASS  57  K  39.10   ! potassium
 MASS  58  Rb 85.47   ! rubidium
 MASS  59  Es 132.91  ! cesium
-MASS  60  Zn  65.4   ! Zn2+
+MASS  60  ZN  65.4   ! Zn2+
 MASS  61  LP  3.00   ! lone pair
 MASS  62  5p 12.01   ! FB15  sp3 aliphatic C
 MASS  63  5c 12.01   ! FB15  sp3 aliphatic C
@@ -254,6 +254,17 @@ MASS  87  6T 12.01   ! FB15  sp3 aliphatic C
 MASS  88  6V 12.01   ! FB15  sp3 aliphatic C
 MASS  89  6W 12.01   ! FB15  sp3 aliphatic C
 MASS  90  6Y 12.01   ! FB15  sp3 aliphatic C
+MASS  91  LIT   6.94100 LI ! Lithium ion
+MASS  92  SOD  22.98977 NA ! Sodium Ion
+MASS  94  POT  39.09830 K  ! Potassium Ion
+MASS  95  CAL  40.08000 CA ! Calcium Ion
+MASS  96  RUB  85.46780 RB ! Rubidium Ion
+MASS  97  CES 132.90545 CS ! Cesium Ion
+MASS  98  BAR 137.32700 BA ! Barium Ion
+MASS  99  CAD 112.41100 CD ! cadmium (II) cation
+MASS  100 CLA  35.45000 CL ! Chloride Ion
+MASS  101 OX   15.99940 O  ! hydroxide oxygen
+MASS  102 HX    1.00800 H  ! hydroxide hydrogen
 
 
 DECL  -CA                    !  proteins
@@ -2135,7 +2146,7 @@ PATCH FIRST NONE LAST NONE
 
 
 RESI TIP3          0.00   ! TIPS3P WATER MODEL  
-                         ! GENERATE USING NOANGLE NODIHEDRAL
+                          ! GENERATE USING NOANGLE NODIHEDRAL
 GROUP   
 ATOM OH2  OW     -0.834
 ATOM H1   HW      0.417 
@@ -2144,10 +2155,85 @@ BOND OH2  H1     OH2  H2    H1   H2    ! THE LAST BOND IS NEEDED FOR SHAKE
 ANGLE H1 OH2 H2    ! REQUIRED
 PATCHING FIRS NONE LAST NONE   
  
+RESI TPFB          0.00   ! "mmff" water model, as an analog of tip3p
+GROUP   
+ATOM OH2  OW     -0.834
+ATOM H1   HW      0.417 
+ATOM H2   HW      0.417  
+BOND OH2  H1     OH2  H2    H1   H2    ! THE LAST BOND IS NEEDED FOR SHAKE
+ANGLE H1 OH2 H2    ! REQUIRED
+PATCHING FIRS NONE LAST NONE   
+
 RESI CIP      1.00 ! Sodium Ion
 GROUP   
 ATOM NA   IP  1.00
 PATCHING FIRST NONE LAST NONE   
+ 
+RESI OH       -1.00 ! hydroxide ion by adm.jr.
+GROUP
+ATOM O1 OX    -1.32
+ATOM H1 HX     0.32
+BOND O1 H1
+DONOR H1 O1
+ACCEPTOR O1
+
+! Ion parameters from Benoit Roux and Coworkers
+! As of 8/10 new NBFIX terms required
+!
+RESI LIT       1.00 ! Lithium Ion
+GROUP
+ATOM LIT  LIT  1.00
+PATCHING FIRST NONE LAST NONE
+
+RESI SOD       1.00 ! Sodium Ion
+GROUP
+ATOM SOD  SOD  1.00
+PATCHING FIRST NONE LAST NONE
+
+RESI MG        2.00 ! Magnesium Ion
+GROUP
+ATOM MG   MG   2.00
+PATCHING FIRST NONE LAST NONE
+
+RESI POT       1.00 ! Potassium Ion
+GROUP
+ATOM POT   POT 1.00
+PATCHING FIRST NONE LAST NONE
+
+RESI CAL       2.00 ! Calcium Ion
+GROUP
+ATOM CAL  CAL  2.00
+PATCHING FIRST NONE LAST NONE
+
+RESI RUB       1.00 ! Rubidium Ion
+GROUP
+ATOM RUB  RUB  1.00
+PATCHING FIRST NONE LAST NONE
+
+RESI CES       1.00 ! Cesium Ion
+GROUP
+ATOM CES  CES  1.00
+PATCHING FIRST NONE LAST NONE
+
+RESI BAR       2.00 ! Barium Ion
+GROUP
+ATOM BAR  BAR  2.00
+PATCHING FIRST NONE LAST NONE
+
+RESI ZN2       2.00 ! Zinc (II) cation, Roland Stote
+GROUP
+ATOM ZN   ZN   2.00
+PATCHING FIRST NONE LAST NONE
+
+RESI CD2       2.00 ! Cadmium (II) cation
+GROUP
+ATOM CD   CAD  2.00
+PATCHING FIRST NONE LAST NONE
+
+RESI CLA      -1.00 ! Chloride Ion
+GROUP
+ATOM CLA  CLA -1.00
+PATCHING FIRST NONE LAST NONE
 
 
 !
