@@ -306,12 +306,6 @@ DihPrm_new = prm_diff(A99SBFB_DihPrm, A99SB_DihPrm)
 ImpPrm_new = prm_diff(A99SBFB_ImpPrm, A99SB_ImpPrm)
 NbPrm_new = prm_diff(A99SBFB_NbPrm, A99SB_NbPrm)
 
-# circuitous formating precaution
-# for i, nb in enumerate(NbPrm_new):
-#     reformat = tuple([nb])
-#     A99SBFB_NbPrm[reformat] = A99SBFB_NbPrm[nb]
-#     NbPrm_new[i] = reformat
-
 """
 STEP 1: rewrite CHARMM rtf file
 - parse in file
@@ -342,7 +336,7 @@ def ParseRTF(rtf):
             spec, Anum, At, mass = s
             CAtAm[At] = mass
         # profile atom name to atom type on a per residue basis
-        elif specifier.startswith("RESI"):
+        elif specifier.startswith('RESI') or specifier.startswith('PRES'):
             spec, AA, AACharge = s
             CAnAt[AA] = dict()
         # populate residue indexed map from atom names to atom types
@@ -382,9 +376,11 @@ def RewriteRTF(rtf, lines):
                 updated = updated.replace(orig_anum, str(n_mass)).replace('!', '! FB15 ')
                 of.write(updated)
                 n_mass += 1
-        elif line.startswith('RESI'):
+        elif line.startswith('RESI') or line.startswith('PRES'):
             RID = line.split()[1]
-        elif RID not in CResOnly and line.startswith('ATOM'):
+            if len(RID) == 4:
+                RID = RID[1:]
+        elif RID in NewAC.keys() and line.startswith('ATOM'):
             an = line.split()[1]
             at = line.split()[2]
             if an in NewAC[RID].keys():
