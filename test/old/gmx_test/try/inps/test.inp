@@ -1,0 +1,20 @@
+* Append the PDBs
+*
+bomlev -2
+
+! Read in Topology and  Parameter files
+read rtf card name "fb15.rtf"
+
+OPEN UNIT 1 CARD READ NAME "water_ions.rtf"
+READ RTF CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+read param card name "fb15.prm"
+
+OPEN UNIT 1 CARD READ NAME "water_ions.prm"
+READ PARA CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+stop
+
+

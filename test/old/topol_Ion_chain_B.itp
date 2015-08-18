@@ -1,0 +1,33 @@
+;
+;	File 'topol_Ion_chain_B.itp' was generated
+;	By user: kmckiern (1002)
+;	On host: not0rious
+;	At date: Tue Aug 11 16:57:55 2015
+;
+;	This is a include topology file
+;
+;	It was generated using program:
+;	pdb2gmx - VERSION 4.6.3
+;
+;	Command line was:
+;	pdb2gmx -ff amberfb15 -f protein-gmx.pdb 
+;
+;	Force field was read from the standard Gromacs share directory.
+;
+
+[ moleculetype ]
+; Name            nrexcl
+Ion_chain_B         3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+; residue   1 NA  rtp NA   q +1.0
+     1         Na      1     NA     Na      1          1      22.99   ; qtot 1
+; residue   2 NA  rtp NA   q +1.0
+     2         Na      2     NA     Na      2          1      22.99   ; qtot 2
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre_Ion_chain_B.itp"
+#endif
+

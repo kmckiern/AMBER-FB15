@@ -1,0 +1,31 @@
+;
+;	File 'topol_Ion3.itp' was generated
+;	By user: kmckiern (1002)
+;	On host: not0rious
+;	At date: Sat Aug  8 15:03:30 2015
+;
+;	This is a include topology file
+;
+;	It was generated using program:
+;	pdb2gmx - VERSION 4.6.3
+;
+;	Command line was:
+;	pdb2gmx -ff amberfb15 -f protein-gmx.pdb 
+;
+;	Force field was read from the standard Gromacs share directory.
+;
+
+[ moleculetype ]
+; Name            nrexcl
+Ion3                3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+; residue 161 NA  rtp NA   q +1.0
+     1         Na    161     NA     Na      1          1      22.99   ; qtot 1
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre_Ion3.itp"
+#endif
+

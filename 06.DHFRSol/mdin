@@ -1,0 +1,11 @@
+mdin prepared by mdin.py
+&cntrl
+ nsnb=0, nstlim=0, ntb=1, cut=9.0, 
+ imin=5, 
+/
+&ewald
+ order=5, skinnb=0
+/
+&debugf
+do_debugf=1, dumpfrc=1
+/

@@ -1,0 +1,20 @@
+;
+;	File 'topol.top' was generated
+;	By user: kmckiern (1002)
+;	On host: not0rious
+;	At date: Thu Aug 13 19:58:25 2015
+;
+;	This is a standalone topology file
+;
+;	It was generated using program:
+;	pdb2gmx - VERSION 4.6.3
+;
+;	Command line was:
+;	pdb2gmx -ff amberfb15 -f protein-gmx.pdb 
+;
+;	Force field was read from the standard Gromacs share directory.
+;
+
+; Include forcefield parameters
+#include "amberfb15.ff/forcefield.itp"
+

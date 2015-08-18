@@ -7,6 +7,7 @@ import parmed as pmd
 from parmed.amber import parameters
 import xml.etree.ElementTree as ET
 from nifty import printcool_dictionary
+import IPython
 
 # Atom types from parm99.dat
 Type99 = ["C", "CA", "CB", "CC", "CD", "CK", "CM", "CN", "CQ", "CR", "CT", "CV", 
@@ -82,6 +83,8 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
                        ("I",  ("I",  "sp3")), ("FE", ("Fe", "sp3")), ("EP", ("",  "sp3")), 
                        ("OG", ("O", "sp3")), ("OL", ("O", "sp3")), ("AC", ("C", "sp3")),
                        ("EC", ("C", "sp3"))])
+
+IPython.embed()
 
 fout = open('leaprc.fb15','w')
 print >> fout, """logFile leap.log

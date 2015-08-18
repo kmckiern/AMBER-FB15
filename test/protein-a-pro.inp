@@ -1,0 +1,49 @@
+* Run Segment Through CHARMM
+*
+
+! read topology and parameter files
+
+read rtf card name "fb15.rtf"
+read param card name "fb15.prm"
+
+! Read sequence from the PDB coordinate file
+open unit 1 card read name new_mdt_protein-a-pro.pdb
+read sequ pdb unit 1
+
+! now generate the PSF and also the IC table (SETU keyword)
+generate pro setup
+
+rewind unit 1
+
+! set bomlev to -1 to avois sying on lack of hydrogen coordinates
+bomlev -1
+read coor pdb unit 1
+! them put bomlev back up to 0
+bomlev 0
+
+close unit 1
+
+! prints out number of atoms that still have undefined coordinates.
+define test select segid a-pro .and. ( .not. hydrogen ) .and. ( .not. init ) show end
+
+ic para
+ic fill preserve
+ic build
+! hbuild sele all end
+
+energy
+
+! write out the protein structure file (psf) and
+! the coordinate file in pdb and crd format.
+
+write psf card name new_mdt_protein-a-pro-final.psf
+* PSF
+*
+
+write coor card name new_mdt_protein-a-pro-final.crd
+* Coords
+*
+
+stop
+
+    

@@ -8,6 +8,7 @@ from nifty import _exec, printcool_dictionary
 import parmed
 from collections import OrderedDict
 from atest import Calculate_GMX, Calculate_AMBER, interpret_mdp
+from ctest import Calculate_CHARMM
 import simtk.openmm.app as app
 import simtk.openmm as mm
 import simtk.unit as u
@@ -80,7 +81,7 @@ def RTFAtomNames(rtf):
         if len(s) == 0: continue
         specifier = s[0]
         # profile atom name to atom type on a per residue basis
-        if specifier.startswith("RESI"):
+        if specifier.startswith('RESI') or specifier.startswith('PRES'):
             spec, AA, AACharge = s
         # populate residue indexed map from atom names to atom types
         elif specifier == 'ATOM':
@@ -88,7 +89,7 @@ def RTFAtomNames(rtf):
             answer.setdefault(AA, []).append((An, At, float(ACharge)))
     return answer
 # CHARMM rtf with residue definitions
-chrm_rtf = reporoot + '/Params/CHARMM/fb15.rtf'
+chrm_rtf = reporoot + '/test/fb15.rtf'
 chrm_resatoms = RTFAtomNames(chrm_rtf)
 
 gmx_resnames = set(gmx_resatoms.keys())
@@ -96,6 +97,8 @@ chrm_resnames = set(chrm_resatoms.keys())
 print "GMX resnames not in CHARMM:", ' '.join(sorted(list(gmx_resnames.difference(chrm_resnames))))
 print "CHARMM resnames not in GMX:", ' '.join(sorted(list(chrm_resnames.difference(gmx_resnames))))
 
+
+chrm_star = {'C*': 'CS', 'N*': 'NS'}
 
 gmx_chrm_amap = OrderedDict()
 chrm_gmx_amap = OrderedDict()
@@ -110,9 +113,16 @@ for resname in sorted(list(gmx_resnames.intersection(chrm_resnames))):
         # dictionaries come in the same order.  This is a sanity check
         # that checks to see if the atom type and atomic charge are
         # indeed the same.
+        # this is because charmm is not case sensitive and needed to rename somethings.
+        if chrm_atype[0] == '5':
+            if chrm_atype[-1] == 'P':
+                chrm_atype = '6+'
+            else:
+                chrm_atype = str(6) + chrm_atype[1:]
         if gmx_atype != chrm_atype:
-            print "Atom types don't match for", resname, gmx_atom, chrm_atom
-            # raise RuntimeError
+            if gmx_atype not in chrm_star:
+                print "Atom types don't match for", resname, gmx_atom, chrm_atom
+                # raise RuntimeError
         if gmx_acharge != chrm_acharge:
             print "Atomic charges don't match for", resname, gmx_atom, chrm_atom
             # raise RuntimeError
@@ -127,16 +137,14 @@ max_reslen = max([len(v) for v in chrm_atomnames.values()])
 
 pdb_in = sys.argv[1]
 # rewrite the gmx pdb using mdtraj
-_exec('python ~/scripts/manip_proteins/mdt_rewrite_pdb.py %s mdt_%s' % (pdb_in, pdb_in))
+_exec('python ~/scripts/manip_proteins/mdt_rewrite_pdb.py --p0 %s --pf mdt_%s' % (pdb_in, pdb_in))
 
 # run pdb thru/chrm charmming
 _exec('python ~/local/charmming/parser_v3.py mdt_%s' % (pdb_in))
 
-cprm = CharmmParameterSet('fb15.prm', 'fb15.rtf')
-
-# Begin with an AMBER-compatible PDB file
+# Begin with an GMX-compatible PDB file
 # Please ensure by hand :)
-pdb = Molecule('mdt_' + pdb_in, build_topology=False)
+pdb = Molecule(pdb_in, build_topology=False)
 gmx_pdb = copy.deepcopy(pdb)
 del gmx_pdb.Data['elem']
 
@@ -147,6 +155,9 @@ del gmx_pdb.Data['elem']
 # List of atoms in the current residue
 anameInResidue = []
 anumInResidue = []
+
+anirs = []
+
 for i in range(gmx_pdb.na):
     # Rename the ions residue names to be compatible with Gromacs
     if gmx_pdb.resname[i] == 'Na+':
@@ -178,36 +189,69 @@ for i in range(gmx_pdb.na):
         # Try to look up the residue in the chrm_atomnames template
         mapped = False
         for k, v in chrm_atomnames.items():
+            # charmm demands C-terminus written in particular way
+            if 'OXT' in anameInResidue:
+                anameInResidue[anameInResidue.index('O')] = 'OT1'
+                anameInResidue[anameInResidue.index('OXT')] = 'OT2'
             if set(anameInResidue) == v:
                 mapped = True
                 break
         if mapped:
             for anum, aname in zip(anumInResidue, anameInResidue):
                 gmx_pdb.atomname[anum] = chrm_gmx_amap[k][aname]
+        anirs.append(anameInResidue)
         anameInResidue = []
         anumInResidue = []
-    
+
 # Write the Gromacs-compatible PDB file
 gmx_pdbfnm = os.path.splitext(sys.argv[1])[0]+"-gmx.pdb"
 gmx_pdb.write(gmx_pdbfnm)
 
 gmx_ffnames = {'fb15':'amberfb15', 'fb15ni':'amberfb15ni', 'ildn':'amber99sb-ildn'}
+amb_ffnames = {'fb15':'fb15', 'fb15ni':'fF15ni', 'ildn':'ff99SBildn'}
 chrm_ffnames = {'fb15':'fb15', 'fb15ni':'fF15ni', 'ildn':'ff99SBildn'}
+
 # Set up the system in Gromacs
-# _exec("pdb2gmx -ff %s -f %s" % (gmx_ffnames[args.ff], gmx_pdbfnm), stdin="1\n")
+_exec("pdb2gmx -ff %s -f %s > pdb2gmx.out" % (gmx_ffnames[args.ff], gmx_pdbfnm), stdin="1\n")
+
+# need prmtop for openmm
+# Set up the system in AMBER
+amb_outpdbfnm = os.path.splitext(sys.argv[1])[0]+"-amb.pdb"
+
+with open("stage.leap", 'w') as f:
+    print >> f, """source leaprc.{choice}
+pdb = loadpdb {pdbin}
+savepdb pdb {pdbout}
+saveamberparm pdb prmtop inpcrd
+quit
+""".format(choice = amb_ffnames[args.ff],
+           pdbin = sys.argv[1], pdbout = amb_outpdbfnm)
+
+_exec("tleap -f stage.leap")
 
 # Set up the system in CHARMM
 chrm_outpdbfnm = os.path.splitext(pdb_in)[0]+"-chrm.pdb"
 
-# hack, for now, not how to best address
-_exec('sed -i "s/NA+/SOD/g" *pdb')
+pdb_pref = pdb_in.split('.')[0]
+rele = ['mdt', pdb_pref + '-', '.pdb']
+pdbs = [i for i in os.listdir('.') if all(x in i for x in rele)]
+# ensure protein pdb is first in list
+# via: http://stackoverflow.com/questions/2170900/get-first-list-index-containing-sub-string-in-python
+def index_containing_substring(the_list, substring):
+    for i, s in enumerate(the_list):
+        if substring in s:
+              return i
+    return -1
+protein_ndx = index_containing_substring(pdbs, 'pro.')
+pdbs.insert(0, pdbs.pop(protein_ndx))
 
 # for each pdb segment, generate crd and psf
-for i in ['-a-pro', '-b-het']:
+for i in pdbs:
+    i = '-' + i.split('protein-')[-1].split('.')[0]
     pdb_pref = pdb_in.split('.')[0] + i
 
     choice = chrm_ffnames[args.ff]
-    sys = 'new_mdt_' + pdb_pref + '.pdb'
+    sys = 'new_mdt_' + pdb_pref
 
     # run charmming protein pdb thru charmm
     with open(pdb_pref + '.inp', 'w') as f:
@@ -220,7 +264,7 @@ read rtf card name "{choice}.rtf"
 read param card name "{choice}.prm"
 
 ! Read sequence from the PDB coordinate file
-open unit 1 card read name {sys}
+open unit 1 card read name {sys}.pdb
 read sequ pdb unit 1
 
 ! now generate the PSF and also the IC table (SETU keyword)
@@ -242,7 +286,7 @@ define test select segid a-pro .and. ( .not. hydrogen ) .and. ( .not. init ) sho
 ic para
 ic fill preserve
 ic build
-hbuild sele all end
+! hbuild sele all end
 
 energy
 
@@ -263,7 +307,7 @@ stop
     _exec('~/src/c37b2/exec/gnu/charmm < ' + pdb_pref + '.inp > ' + pdb_pref + '.out')
 
 # merge psfs and crds
-with open('append.inp', 'w') as f:
+with open('join.inp', 'w') as f:
     print >> f, """* Append the PDBs
 *
 
@@ -272,33 +316,52 @@ with open('append.inp', 'w') as f:
 read rtf card name {choice}.rtf
 read param card name {choice}.prm
 
-! Read PSF and coordinates from file
-read psf card name {choice}-pro-final.psf
-read coor card name {choice}-pro-final.crd
+! Read PSF from file
+OPEN UNIT 1 FORM READ NAME {protein}-final.psf
+READ PSF CARD UNIT 1
+CLOSe UNIT 1
+
+OPEN UNIT 1 FORM READ NAME {hetatms}-final.psf
+READ PSF CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+! Read protein coord from the coordinate file
+OPEN UNIT 1 CARD READ NAME {protein}-final.crd
+READ COOR CARD UNIT 1 RESID
+CLOSE UNIT 1
+
+OPEN UNIT 1 CARD READ NAME {hetatms}-final.crd
+READ COOR CARD APPEnd UNIT 1
+CLOSE UNIT 1
 
 ! redo hydrogen coordinates for the complete structure
-! coor init sele hydrogen end
-hbuild
+! COOR INIT SELE HYDRogen END
+! HBUILd
 
-! calculate energy
-energy
+ENERgy
 
-ioform extended
-
-write psf card name {choice}-final.psf
-* Final structure
+OPEN UNIT 1 CARD WRITe NAME sys-full.psf
+WRITe PSF CARD UNIT 1
+* PSF
 *
 
-write coor card name {choice}-final.crd
-* Final structure
+OPEN UNIT 1 CARD WRITe NAME {pdbout}
+WRITe COOR PDB UNIT 1
+* Coords
 *
 
+OPEN UNIT 1 CARD WRITe NAME sys-full.crd
+WRITe COOR CARD UNIT 1
+* Coords
+*
 
 stop
 
 """.format(choice = chrm_ffnames[args.ff], 
+           protein = pdbs[0].split('.pdb')[0], 
+           hetatms = pdbs[1].split('.pdb')[0], 
            pdbout = chrm_outpdbfnm)
-_exec('~/src/c37b2/exec/gnu/charmm < append.inp > append.out')
+_exec('~/src/c37b2/exec/gnu/charmm < join.inp > join.out')
 
 # Load the GROMACS output coordinate file
 gmx_gro = Molecule("conf.gro", build_topology=False)
@@ -324,6 +387,10 @@ for i in range(gmx_pdb.na):
         anameInResidue_pdb = []
         anameInResidue_gro = []
 
+
+# run pdb thru/chrm charmming
+_exec('sed -i "s/NA+/Na+/g" *pdb')
+
 chrm_pdb = Molecule(chrm_outpdbfnm, build_topology=False)
 anumInResidue = []
 anameInResidue_pdb = []
@@ -339,14 +406,21 @@ for i in range(pdb.na):
     anameInResidue_chrm.append(chrm_pdb.atomname[i])
     if (i == (pdb.na - 1)) or ((pdb.chain[i+1], pdb.resid[i+1]) != (pdb.chain[i], pdb.resid[i])):
         if set(anameInResidue_pdb) != set(anameInResidue_chrm):
-            print set(anameInResidue_pdb).symmetric_difference(set(anameInResidue_chrm))
+            unmatched = set(anameInResidue_pdb).symmetric_difference(set(anameInResidue_chrm))
+            print unmatched
             print "AMBER PDB: Atom names do not match for residue %i (%s)" % (pdb.resid[i], pdb.resname[i])
-            raise RuntimeError
+            terminal_o = ['OXT', 'O', 'OT1', 'OT2']
+            if len(unmatched - set(terminal_o)) > 0:
+                raise RuntimeError
+            else:
+                anameInResidue_pdb[anameInResidue_pdb.index('O')] = 'OT1'
+                anameInResidue_pdb[anameInResidue_pdb.index('OXT')] = 'OT2'
         for anum, aname in zip(anumInResidue, anameInResidue_pdb):
             anumMap_chrm.append(anumInResidue[anameInResidue_chrm.index(aname)])
         anumInResidue = []
         anameInResidue_pdb = []
         anameInResidue_chrm = []
+
 
 anumMap_chrm_gro = [None for i in range(pdb.na)]
 for i, (anum_chrm, anum_gro) in enumerate(zip(anumMap_chrm, anumMap_gro)):
@@ -379,25 +453,28 @@ M.xyzs[0] = pos
 M.write('constrained.gro')
 
 # Gromacs calculation
-CHARMM_Energy, CHARMM_Force, Ecomps_CHARMM = Calculate_CHARMM('constrained.gro', 'topol.top', 'shot.mdp')
-CHARMM_Force = CHARMM_Force.reshape(-1,3)
+GMX_Energy, GMX_Force, Ecomps_GMX = Calculate_GMX('constrained.gro', 'topol.top', 'shot.mdp')
+GMX_Force = GMX_Force.reshape(-1,3)
 
 # Print Gromacs energy components
-printcool_dictionary(Ecomps_CHARMM, title="GROMACS energy components")
+printcool_dictionary(Ecomps_GMX, title="GROMACS energy components")
 
 # Parse the .mdp file to inform ParmEd
 defines, sysargs, mdp_opts = interpret_mdp('shot.mdp')
 
-parm = parmed.chrm.AmberParm('prmtop', 'inpcrd')
 GmxGro = parmed.gromacs.GromacsGroFile.parse('constrained.gro')
+# CHARMM calculation
+parm = CharmmParameterSet('fb15.prm', 'fb15.rtf')
+psf = CharmmPsfFile('sys-full.psf')
+crd = CharmmCrdFile('sys-full.crd')
 parm.box = GmxGro.box
 parm.positions = GmxGro.positions
 
-# AMBER calculation (optional)
-AMBER_Energy, AMBER_Force, Ecomps_AMBER = Calculate_AMBER(parm, mdp_opts)
-AMBER_Force = AMBER_Force.reshape(-1,3)
-# Print AMBER energy components
-printcool_dictionary(Ecomps_AMBER, title="AMBER energy components")
+IPython.embed()
+CHARMM_Energy, CHARMM_Force, Ecomps_CHARMM = Calculate_CHARMM(parm, psf, crd, sysargs, defines)
+CHARMM_Force = CHARMM_Force.reshape(-1,3)
+# Print CHARMM energy components
+printcool_dictionary(Ecomps_CHARMM, title="CHARMM energy components")
 
 def compare_ecomps(in1, in2):
     groups = [([['Bond'], ['BOND']]),
@@ -422,10 +499,10 @@ def compare_ecomps(in1, in2):
         print "%%%is" % (max([len(t) for t in t1]) + 3) % t1[i], "% 18.6f" % v1[i], "  --vs--",
         print "%%%is" % (max([len(t) for t in t2]) + 3) % t2[i], "% 18.6f" % v2[i],
         print "Diff: % 12.6f" % (v2[i]-v1[i])
-        
-compare_ecomps(Ecomps_CHARMM, Ecomps_AMBER)
 
-D_Force = CHARMM_Force - AMBER_Force
+compare_ecomps(Ecomps_GMX, Ecomps_CHARMM)
+
+D_Force = GMX_Force - CHARMM_Force
 D_FrcRMS = np.sqrt(np.mean([sum(k**2) for k in D_Force]))
 D_FrcMax = np.sqrt(np.max(np.array([sum(k**2) for k in D_Force])))
 

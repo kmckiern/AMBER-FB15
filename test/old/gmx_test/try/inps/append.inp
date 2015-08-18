@@ -1,0 +1,33 @@
+* Append the PDBs
+*
+
+! read topology and parameter files
+
+read rtf card name fb15.rtf
+read param card name fb15.prm
+
+! Read PSF and coordinates from file
+read psf card name fb15-pro-final.psf
+read coor card name fb15-pro-final.crd
+
+! redo hydrogen coordinates for the complete structure
+! coor init sele hydrogen end
+hbuild
+
+! calculate energy
+energy
+
+ioform extended
+
+write psf card name fb15-final.psf
+* Final structure
+*
+
+write coor card name fb15-final.crd
+* Final structure
+*
+
+
+stop
+
+

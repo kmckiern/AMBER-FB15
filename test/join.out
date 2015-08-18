@@ -1,0 +1,222 @@
+1
+                 Chemistry at HARvard Macromolecular Mechanics
+            (CHARMM) - Developmental Version 37b2  February 15, 2013            
+       Copyright(c) 1984-2001  President and Fellows of Harvard College
+                              All Rights Reserved
+       Current operating system: Linux-3.8.0-35-generic(x86_64)@not0rious       
+                 Created on  8/16/15 at 23:11:38 by user: kmckiern    
+
+            Maximum number of ATOMS:     60120, and RESidues:       20040
+ RDTITL> * APPEND THE PDBS
+ RDTITL> *
+  
+ CHARMM>     
+  
+ CHARMM>    ! read topology and parameter files
+ CHARMM>     
+  
+ CHARMM>    read rtf card name fb15.rtf
+ VOPEN> Attempting to open::fb15.rtf::
+ MAINIO> Residue topology file being read from unit  90.
+ TITLE> *  AMBER CORNELL ET AL. (PARM94 & PARM99) FORCE FIELD CONVERSION
+ TITLE> *  SEE: JACS (1995) 117, 5179-5197.
+ TITLE> *  SEE:  J COMP. CHEM. (2000) 21, 1049-1074.
+ TITLE> *  NUCLEIC ACID PART CONVERTED BY TEC3, MARCH 1997
+ TITLE> *  PROTEIN PART CONVERTED BY TEC3, FEBRUARY 1999
+ TITLE> *  CHANGES FOR PARM99 BY JEFF KLAUDA OCTOBER 2003
+ TITLE> 23    1
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>    read param card name fb15.prm
+ VOPEN> Attempting to open::fb15.prm::
+
+          PARAMETER FILE BEING READ FROM UNIT 90
+ TITLE> *  AMBER PARM99SB FORCE FIELD CONVERSION
+ TITLE> *  SEE: PROTIENS: STR. FUNC. AND BIOINFO. 65, 712 (2006)
+ TITLE> *
+*****  WARNING  ***** PARRDR no nonbond parameters for atom type:  64  CAL 
+ NO nonbond interactions will be computed for this atom type.
+ PARMIO> NONBOND, HBOND lists and IMAGE atoms cleared.
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! Read PSF from file
+ CHARMM>    OPEN UNIT 1 FORM READ NAME new_mdt_protein-a-pro-final.psf
+ VOPEN> Attempting to open::new_mdt_protein-a-pro-final.psf::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-a-pro-final.psf
+  
+ CHARMM>    READ PSF CARD UNIT 1
+ MAINIO> Protein structure file being read from unit   1.
+ TITLE>  * PSF
+ TITLE>  *  DATE:     8/16/15     23:11:38      CREATED BY USER: kmckiern
+ TITLE>  *
+ PSFSUM> PSF modified: NONBOND lists and IMAGE atoms cleared.
+ PSFSUM> Summary of the structure file counters :
+         Number of segments      =        1   Number of residues   =       61
+         Number of atoms         =      927   Number of groups     =       57
+         Number of bonds         =      934   Number of angles     =     1688
+         Number of dihedrals     =     2465   Number of impropers  =      175
+         Number of cross-terms   =        0
+         Number of HB acceptors  =      100   Number of HB donors  =      108
+         Number of NB exclusions =        0   Total charge =   -2.00000
+  
+ CHARMM>    CLOSe UNIT 1
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    OPEN UNIT 1 FORM READ NAME new_mdt_protein-b-het-final.psf
+ VOPEN> Attempting to open::new_mdt_protein-b-het-final.psf::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-b-het-final.psf
+  
+ CHARMM>    READ PSF CARD APPEnd UNIT 1
+ MAINIO> Protein structure file being read from unit   1.
+ TITLE>  * PSF
+ TITLE>  *  DATE:     8/16/15     23:11:38      CREATED BY USER: kmckiern
+ TITLE>  *
+ PSFSUM> PSF modified: NONBOND lists and IMAGE atoms cleared.
+ PSFSUM> Summary of the structure file counters :
+         Number of segments      =        2   Number of residues   =       63
+         Number of atoms         =      929   Number of groups     =       59
+         Number of bonds         =      934   Number of angles     =     1688
+         Number of dihedrals     =     2465   Number of impropers  =      175
+         Number of cross-terms   =        0
+         Number of HB acceptors  =      100   Number of HB donors  =      108
+         Number of NB exclusions =        0   Total charge =    0.00000
+  
+ CHARMM>    CLOSe UNIT 1
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! Read protein coord from the coordinate file
+ CHARMM>    OPEN UNIT 1 CARD READ NAME new_mdt_protein-a-pro-final.crd
+ VOPEN> Attempting to open::new_mdt_protein-a-pro-final.crd::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-a-pro-final.crd
+  
+ CHARMM>    READ COOR CARD UNIT 1 RESID
+          SPATIAL COORDINATES BEING READ FROM UNIT  1
+ TITLE> * COORDS
+ TITLE> *  DATE:     8/16/15     23:11:38      CREATED BY USER: KMCKIERN
+ TITLE> *
+ ** WARNING ** After reading, there are no coordinates for selected atom:   928    62 NA+  NA+ 
+ ** WARNING ** After reading, there are no coordinates for selected atom:   929    63 NA+  NA+ 
+
+ ** A total of     2 selected atoms have no coordinates
+ *** LEVEL  2 WARNING *** BOMLEV IS    0
+  
+ CHARMM>    CLOSE UNIT 1
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    OPEN UNIT 1 CARD READ NAME new_mdt_protein-b-het-final.crd
+ VOPEN> Attempting to open::new_mdt_protein-b-het-final.crd::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-b-het-final.crd
+  
+ CHARMM>    READ COOR CARD APPEnd UNIT 1
+          SPATIAL COORDINATES BEING READ FROM UNIT  1
+ A RESIDUE OFFSET OF  61 WILL BE USED.
+ INFO: A subset of total atoms will be read.
+
+ TITLE> * COORDS
+ TITLE> *  DATE:     8/16/15     23:11:38      CREATED BY USER: KMCKIERN
+ TITLE> *
+  
+ CHARMM>    CLOSE UNIT 1
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! redo hydrogen coordinates for the complete structure
+ CHARMM>    ! COOR INIT SELE HYDRogen END
+ CHARMM>    ! HBUILd
+ CHARMM>     
+  
+ CHARMM>    ENERgy
+
+ NONBOND OPTION FLAGS: 
+     ELEC     VDW      GROUps   CDIElec  SWITch   VGROup   VSWItch 
+     BYGRoup  NOEXtnd  NOEWald 
+ CUTNB  = 14.000 CTEXNB =999.000 CTONNB = 10.000 CTOFNB = 12.000
+ CGONNB =  0.000 CGOFNB = 10.000
+ WMIN   =  1.400 WRNMXD =  0.500 E14FAC =  0.833 EPS    =  1.000
+ NBXMOD =      5
+ There are        0 atom  pairs and        0 atom  exclusions.
+ There are        0 group pairs and        0 group exclusions.
+ <MAKINB> with mode   5 found   2622 exclusions and   2437 interactions(1-4)
+ <MAKGRP> found     56 group exclusions.
+ Generating nonbond list with Exclusion mode = 5
+ == PRIMARY == SPACE FOR   266949 ATOM PAIRS AND     1324 GROUP PAIRS
+
+ General group nonbond list generation found:
+      792 GROUP PAIRS WERE FOUND FOR GROUP LIST
+      978 GROUP PAIRS WERE BEYOND CUTOFFS
+        0 GROUP PAIRS WERE NOT SELECTED
+        0 QM group pairs excluded
+ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
+ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
+ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
+ ----------       ---------    ---------    ---------    ---------    ---------
+ENER>        0 202163.61819      0.00000    256.53500
+ENER INTERN>      502.23413    406.99135      0.00000 201240.55061   1800.74800
+ENER EXTERN>     -219.46948  -1567.43642      0.00000      0.00000      0.00000
+ ----------       ---------    ---------    ---------    ---------    ---------
+  
+ CHARMM>     
+  
+ CHARMM>    OPEN UNIT 1 CARD WRITe NAME sys-full.psf
+ VOPEN> Attempting to open::sys-full.psf::
+ OPNLGU> Unit  1 opened for WRITE access to sys-full.psf
+  
+ CHARMM>    WRITe PSF CARD UNIT 1
+ RDTITL> * PSF
+ RDTITL> *
+  
+ CHARMM>     
+  
+ CHARMM>    OPEN UNIT 1 CARD WRITe NAME protein-chrm.pdb
+ OPNLGU> Unit already open. The old file will be closed first.
+ VCLOSE: Closing unit    1 with status "KEEP"
+ VOPEN> Attempting to open::protein-chrm.pdb::
+ OPNLGU> Unit  1 opened for WRITE access to protein-chrm.pdb
+  
+ CHARMM>    WRITe COOR PDB UNIT 1
+ RDTITL> * COORDS
+ RDTITL> *
+  Write CHARMM-pdb format
+  
+ CHARMM>     
+  
+ CHARMM>    OPEN UNIT 1 CARD WRITe NAME sys-full.crd
+ OPNLGU> Unit already open. The old file will be closed first.
+ VCLOSE: Closing unit    1 with status "KEEP"
+ VOPEN> Attempting to open::sys-full.crd::
+ OPNLGU> Unit  1 opened for WRITE access to sys-full.crd
+  
+ CHARMM>    WRITe COOR CARD UNIT 1
+ RDTITL> * COORDS
+ RDTITL> *
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    stop
+$$$$$$  New timer profile $$$$$
+   List time                       0.00 Other:            0.00
+      Nonbond force                   0.00 Other:            0.00
+         Bond energy                     0.00 Other:            0.00
+         Angle energy                    0.00 Other:            0.00
+         Dihedral energy                 0.00 Other:            0.00
+         Restraints energy               0.00 Other:            0.00
+      INTRNL energy                   0.00 Other:            0.00
+   Energy time                     0.00 Other:            0.00
+ Total time                      0.09 Other:            0.09
+
+                    NORMAL TERMINATION BY NORMAL STOP
+                    MOST SEVERE WARNING WAS AT LEVEL  2
+
+                    $$$$$ JOB ACCOUNTING INFORMATION $$$$$
+                     ELAPSED TIME:     0.09  SECONDS 
+                         CPU TIME:     0.09  SECONDS 

@@ -1,0 +1,100 @@
+1
+                 Chemistry at HARvard Macromolecular Mechanics
+            (CHARMM) - Developmental Version 37b2  February 15, 2013            
+       Copyright(c) 1984-2001  President and Fellows of Harvard College
+                              All Rights Reserved
+       Current operating system: Linux-3.8.0-35-generic(x86_64)@not0rious       
+                 Created on  8/10/15 at 14:55:29 by user: kmckiern    
+
+            Maximum number of ATOMS:     60120, and RESidues:       20040
+ RDTITL> * RUN SEGMENT THROUGH CHARMM
+ RDTITL> *
+  
+ CHARMM>     
+  
+ CHARMM>    ! read topology and parameter files
+ CHARMM>     
+  
+ CHARMM>    read rtf card name "fb15.rtf"
+ VOPEN> Attempting to open::fb15.rtf::
+ MAINIO> Residue topology file being read from unit  90.
+ TITLE> *  AMBER CORNELL ET AL. (PARM94 & PARM99) FORCE FIELD CONVERSION
+ TITLE> *  SEE: JACS (1995) 117, 5179-5197.
+ TITLE> *  SEE:  J COMP. CHEM. (2000) 21, 1049-1074.
+ TITLE> *  NUCLEIC ACID PART CONVERTED BY TEC3, MARCH 1997
+ TITLE> *  PROTEIN PART CONVERTED BY TEC3, FEBRUARY 1999
+ TITLE> *  CHANGES FOR PARM99 BY JEFF KLAUDA OCTOBER 2003
+ TITLE> 23    1
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>    read param card name "fb15.prm"
+ VOPEN> Attempting to open::fb15.prm::
+
+          PARAMETER FILE BEING READ FROM UNIT 90
+ TITLE> *  AMBER PARM99SB FORCE FIELD CONVERSION
+ TITLE> *  SEE: PROTIENS: STR. FUNC. AND BIOINFO. 65, 712 (2006)
+ TITLE> *
+ PARMIO> NONBOND, HBOND lists and IMAGE atoms cleared.
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! Read sequence from the PDB coordinate file
+ CHARMM>    open unit 1 card read name new_mdt_protein-b-het.pdb
+ VOPEN> Attempting to open::new_mdt_protein-b-het.pdb::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-b-het.pdb
+  
+ CHARMM>    read sequ pdb unit 1
+ MAINIO> Sequence information being read from unit   1.
+ TITLE>  *
+
+          RESIDUE SEQUENCE --     2 RESIDUES
+          NA+ NA+ 
+  
+ CHARMM>     
+  
+ CHARMM>    ! now generate the PSF and also the IC table (SETU keyword)
+ CHARMM>    generate pro setup
+
+ ***** ERROR in GENIC ***** Residue 'NA+   ' was not found.
+
+
+                                                  
+                            /---------\           
+                           /           \          
+                          /             \         
+                         /               \        
+                         !  XXXX   XXXX  !        
+                         !  XXXX   XXXX  !        
+                         !  XXX     XXX  !        
+                         !       X       !        
+                          --\   XXX   /--         
+                           ! !  XXX  ! !          
+                           ! !       ! !          
+                           ! I I I I I !          
+                           !  I I I I  !          
+                            \         /           
+                             --     --            
+                               \---/              
+                        XXX             XXX       
+                       XXXX             XXXX      
+                       XXXXX           XXXXX      
+                          XXX         XXX         
+                            XXX     XXX           
+                               XXXXX              
+                              XXX XXX             
+                            XXX     XXX           
+                          XXX         XXX         
+                       XXXXX           XXXXX      
+                       XXXX             XXXX      
+                        XXX             XXX       
+                                                  
+                                                  
+ Execution terminated due to the detection of a fatal error.
+
+                    ABNORMAL TERMINATION
+                    NO WARNINGS WERE ISSUED
+
+                    $$$$$ JOB ACCOUNTING INFORMATION $$$$$
+                     ELAPSED TIME:     0.05  SECONDS 
+                         CPU TIME:     0.04  SECONDS 

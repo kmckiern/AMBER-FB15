@@ -1,0 +1,36 @@
+! The following section contains NBFixes for sodium interacting with
+! carboxylate oxygens of various CHARMM force fields. It will generate
+! level -1 warnings whenever any of these force fields have not been
+! read prior to the current stream file. Since we don't want to force
+! the user to always read all the force fields, we're suppressing the
+! warnings. The only side effect is that you will have "most severe
+! warning was at level 0" at the end of your output. Also note that
+! the user is responsible for reading the current file last if they
+! want the NBFixes to apply. A more elegant solution would require new
+! features to be added to CHARMM.
+! parallel fix, to avoid duplicated messages in the log
+set para
+if ?NUMNODE gt 1 set para node 0
+
+set wrn ?WRNLEV
+! Some versions of CHARMM don't seem to initialize wrnlev...
+if "@WRN" eq "?WRNLEV" set wrn 5
+set bom ?bomlev
+WRNLEV -1 @PARA
+BOMLEV -1 @PARA
+read para card flex append
+* NBFix between carboxylate and sodium
+*
+
+! These NBFixes will only apply if the main files have been read in first!!!
+NBFIX
+SOD    OC       -0.075020   3.190 ! For prot carboxylate groups
+SOD    OCL      -0.075020   3.190 ! For lipid carboxylate groups
+SOD    OC2D2    -0.075020   3.190 ! For carb carboxylate groups
+SOD    OG2D2    -0.075020   3.190 ! For CGenFF carboxylate groups
+END
+BOMLEV @bom @PARA
+WRNLEV @wrn @PARA
+
+return
+

@@ -1,0 +1,8 @@
+mdin prepared by mdin.py
+&cntrl
+ nsnb=0, nstlim=0, ntb=0, cut=9999.0, 
+ imin=5, 
+/
+&debugf
+do_debugf=1, dumpfrc=1
+/

@@ -1,0 +1,38 @@
+* Run Segment Through CHARMM
+*
+
+! read topology and parameter files
+
+read rtf card name "water_ions.rtf"
+read param card name "water_ions.prm"
+
+! Read sequence from the PDB coordinate file
+open unit 1 card read name new_mdt_protein-b-het.pdb
+read sequ pdb unit 1
+
+! now generate the PSF and also the IC table (SETU keyword)
+generate pro setup
+
+rewind unit 1
+
+close unit 1
+
+! prints out number of atoms that still have undefined coordinates.
+define test select segid a-pro .and. ( .not. hydrogen ) .and. ( .not. init ) show end
+
+energy
+
+! write out the water/ion protein structure file (psf) and
+! the coordinate file in pdb and crd format.
+
+write psf card name water_ions-final.psf
+* PSF
+*
+
+write coor card name water_ions-final.crd
+* Coords
+*
+
+stop
+
+

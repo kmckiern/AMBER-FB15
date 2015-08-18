@@ -180,7 +180,7 @@ def rm_gmx_baks(dir):
     for root, dirs, files in os.walk(dir):
         for file in files:
             if re.match('^#',file):
-                os.remove(file)
+                os.remove(os.path.join(root, file))
 
 def callgmx(command, stdin=None, print_to_screen=False, print_command=True, **kwargs):
     # Remove backup files.

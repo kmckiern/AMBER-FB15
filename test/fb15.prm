@@ -1,0 +1,1439 @@
+*  AMBER parm99SB force field conversion
+*  See: Protiens: Str. Func. and Bioinfo. 65, 712 (2006)
+*
+
+!
+!  This is a hand-conversion of the parm99SB force field
+!  based on the parm99-all.dat file.  All the atom type names 
+!  are the same except where otherwise noted.
+!
+!  note: types N* remaned to NS
+!              C* renamed to CS
+!
+!  note: the HO and HW nonbonded parameters, although zero in 
+!  Cornell et al. should not have a 0.0 vdw radius in CHARMM 
+!  to avoid difficulties with the 0.0/0.0 in the FAST OFF 
+!  van der Waal code...
+!
+!  note: the default nonbonded options chosen here are to match AMBER.
+!  It is not recommended that users actually run with GROUP based 
+!  truncation and a switch unless really trying to match AMBER.  
+!  Better would be ATOM based FSHIFT VSHIFT, however note that this
+!  does modify the energies (and effectively the parameters).
+!
+!  Also note that long-range interactions are handeled differently between
+!  AMBER and CHARMM.  To avoid differences when comparing energies and
+!  forces the the cuttoffs were set to be large in the individule
+!  comparison input files, i.e. 80 Angs.
+!
+!  created by Jeffery Klauda (jbklauda@umd.edu)
+!
+ATOMS
+MASS   1  C  12.01   ! sp2 C carbonyl group
+MASS   2  CA 12.01   ! sp2 C pure aromatic (benzene)
+MASS   3  CB 12.01   ! sp2 aromatic C, 5&6 membered ring junction
+MASS   4  CC 12.01   ! sp2 aromatic C, 5 memb. ring HIS
+MASS   5  CD 12.01   ! sp2 C atom in the middle of: C=CD-CD=C
+MASS   6  CK 12.01   ! sp2 C 5 memb.ring in purines
+MASS   7  CM 12.01   ! sp2 C  pyrimidines in pos. 5 & 6
+MASS   8  CN 12.01   ! sp2 C aromatic 5&6 memb.ring junct.(TRP)
+MASS   9  CQ 12.01   ! sp2 C in 5 mem.ring of purines between 2 N
+MASS  10  CR 12.01   ! sp2 arom as CQ but in HIS
+MASS  11  CT 12.01   ! sp3 aliphatic C
+MASS  12  CV 12.01   ! sp2 arom. 5 memb.ring w/1 N and 1 H (HIS)
+MASS  13  CW 12.01   ! sp2 arom. 5 memb.ring w/1 N-H and 1 H (HIS)
+MASS  14  CS 12.01   ! sp2 arom. 5 memb.ring w/1 subst. (TRP)
+MASS  15  CY 12.01   ! nitrile C (Howard et al.JCC,16,243,1995)
+MASS  16  CZ 12.01   ! sp C (Howard et al.JCC,16,243,1995)
+MASS  17  C0 40.08   ! calcium
+MASS  18  H  1.008   ! H bonded to nitrogen atoms
+MASS  19  HC 1.008   ! H aliph. bond. to C without electrwd.group
+MASS  20  H1 1.008   ! H aliph. bond. to C with 1 electrwd. group
+MASS  21  H2 1.008   ! H aliph. bond. to C with 2 electrwd.groups
+MASS  22  H3 1.008   ! H aliph. bond. to C with 3 eletrwd.groups
+MASS  23  HA 1.008   ! H arom. bond. to C without elctrwd. groups
+MASS  24  H4 1.008   ! H arom. bond. to C with 1 electrwd. group
+MASS  25  H5 1.008   ! H arom.at C with 2 elctrwd. gr,+HCOO group
+MASS  26  HO 1.008   ! hydroxyl group
+MASS  27  HS 1.008   ! hydrogen bonded to sulphur (pol?)
+MASS  28  HW 1.008   ! H in TIP3P water
+MASS  29  HP 1.008   ! H bonded to C next to positively charged gr
+MASS  30  HZ 1.008   ! H bond sp C (Howard et al.JCC,16,243,1995)
+MASS  31  F  19.00   ! fluorine
+MASS  32  Cl 35.45   ! chlorine  (Applequist)
+MASS  33  Br 79.90   ! bromine  (Applequist)
+MASS  34  I  126.9   ! iodine   (Applequist)
+MASS  35  IM 35.45   ! assumed to be Cl- (ion minus)
+MASS  36  IB 131.0   ! 'big ion w/ waters' for vacuum (Na+, 6H2O)
+MASS  37  MG 24.305  ! magnesium
+MASS  38  N  14.01   ! sp2 nitrogen in amide groups
+MASS  39  NA 14.01   ! sp2 N in 5 memb.ring w/H atom (HIS)
+MASS  40  NB 14.01   ! sp2 N in 5 memb.ring w/LP (HIS,ADE,GUA)
+MASS  41  NC 14.01   ! sp2 N in 6 memb.ring w/LP (ADE,GUA)
+MASS  42  N2 14.01   ! sp2 N in amino groups
+MASS  43  N3 14.01   ! sp3 N for charged amino groups (Lys, etc)
+MASS  44  NT 14.01   ! sp3 N for amino groups amino groups
+MASS  45  NS 14.01   ! sp2 N
+MASS  46  NY 14.01   ! nitrile N (Howard et al.JCC,16,243,1995)
+MASS  47  O  16.00   ! carbonyl group oxygen
+MASS  48  O2 16.00   ! carboxyl and phosphate group oxygen
+MASS  49  OW 16.00   ! oxygen in TIP3P water
+MASS  50  OH 16.00   ! oxygen in hydroxyl group
+MASS  51  OS 16.00   ! ether and ester oxygen
+MASS  52  P  30.97   ! phosphate,pol:JACS,112,8543,90,K.J.Miller
+MASS  53  S  32.06   ! S in disulfide linkage,pol:JPC,102,2399,98
+MASS  54  SH 32.06   ! S in cystine
+MASS  55  Li  6.94   ! lithium, ions pol:J.PhysC,11,1541,(1978)
+MASS  56  IP 22.99   ! assumed to be Na+ (ion plus)
+MASS  57  K  39.10   ! potassium
+MASS  58  Rb 85.47   ! rubidium
+MASS  59  Es 132.91  ! cesium
+MASS  60  Zn  65.4   ! Zn2+
+MASS  61  LP  3.00   ! lone pair
+MASS  62  OX  15.99940 ! hydroxide oxygen
+MASS  63  HX  1.00800 ! hydroxide hydrogen
+MASS  64  CAL 40.08000 ! Calcium Ion
+MASS  65  BAR 137.32700 ! Barium Ion
+MASS  66  CAD 112.41100 ! cadmium (II) cation
+MASS  67  5P 12.01   ! FB15  sp3 aliphatic C
+MASS  68  5c 12.01   ! FB15  sp3 aliphatic C
+MASS  69  5d 12.01   ! FB15  sp3 aliphatic C
+MASS  70  5e 12.01   ! FB15  sp3 aliphatic C
+MASS  71  5h 12.01   ! FB15  sp3 aliphatic C
+MASS  72  5i 12.01   ! FB15  sp3 aliphatic C
+MASS  73  5j 12.01   ! FB15  sp3 aliphatic C
+MASS  74  5k 12.01   ! FB15  sp3 aliphatic C
+MASS  75  5q 12.01   ! FB15  sp3 aliphatic C
+MASS  76  5t 12.01   ! FB15  sp3 aliphatic C
+MASS  77  6C 12.01   ! FB15  sp3 aliphatic C
+MASS  78  6D 12.01   ! FB15  sp3 aliphatic C
+MASS  79  6E 12.01   ! FB15  sp3 aliphatic C
+MASS  80  6F 12.01   ! FB15  sp3 aliphatic C
+MASS  81  6H 12.01   ! FB15  sp3 aliphatic C
+MASS  82  6I 12.01   ! FB15  sp3 aliphatic C
+MASS  83  6J 12.01   ! FB15  sp3 aliphatic C
+MASS  84  6K 12.01   ! FB15  sp3 aliphatic C
+MASS  85  6L 12.01   ! FB15  sp3 aliphatic C
+MASS  86  6M 12.01   ! FB15  sp3 aliphatic C
+MASS  87  6N 12.01   ! FB15  sp3 aliphatic C
+MASS  88  6P 12.01   ! FB15  sp3 aliphatic C
+MASS  89  6Q 12.01   ! FB15  sp3 aliphatic C
+MASS  90  6R 12.01   ! FB15  sp3 aliphatic C
+MASS  91  6S 12.01   ! FB15  sp3 aliphatic C
+MASS  92  6T 12.01   ! FB15  sp3 aliphatic C
+MASS  93  6V 12.01   ! FB15  sp3 aliphatic C
+MASS  94  6W 12.01   ! FB15  sp3 aliphatic C
+MASS  95  6Y 12.01   ! FB15  sp3 aliphatic C
+
+BONDS
+OW   HW  553.0    0.9572    !  TIP3P water
+HW   HW  553.0    1.5136    !  TIP3P water
+C    C   310.0    1.525     !  Junmei et al, 1999
+C    CA  463.3    1.392     !  FB15   JCC,7,(1986),230; (not used any more in TYR)
+C    CB  447.0    1.419     !  JCC,7,(1986),230; GUA
+C    CM  410.0    1.444     !  JCC,7,(1986),230; THY,URA
+C    CT  275.0    1.509     !  FB15   JCC,7,(1986),230; AA
+C    N   408.9    1.352     !  FB15   JCC,7,(1986),230; AA
+C    NS  424.0    1.383     !  JCC,7,(1986),230; CYT,URA
+C    NA  418.0    1.388     !  JCC,7,(1986),230; GUA.URA
+C    NC  457.0    1.358     !  JCC,7,(1986),230; CYT
+C    O   567.8    1.227     !  FB15   JCC,7,(1986),230; AA,CYT,GUA,THY,URA
+C    O2  632.3    1.254     !  FB15   JCC,7,(1986),230; GLU,ASP
+C    OH  446.7    1.367     !  FB15   JCC,7,(1986),230; (not used any more for TYR) 
+C    OS  450.0    1.323     !  Junmei et al, 1999
+C    H4  367.0    1.080     !  Junmei et al, 1999
+C    H5  367.0    1.080     !  Junmei et al, 1999
+CA   CA  436.4    1.383     !  FB15   JCC,7,(1986),230; BENZENE,PHE,TRP,TYR
+CA   CB  467.7    1.397     !  FB15   JCC,7,(1986),230; ADE,TRP
+CA   CM  427.0    1.433     !  JCC,7,(1986),230; CYT
+CA   CN  466.8    1.406     !  FB15   JCC,7,(1986),230; TRP
+CA   CT  315.8    1.487     !  FB15   JCC,7,(1986),230; PHE,TYR
+CA   HA  368.9    1.083     !  FB15   changed from 340. bsd on C6H6 nmodes; PHE,TRP,TYR
+CA   H4  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; no assigned
+CA   N2  479.4    1.364     !  FB15   JCC,7,(1986),230; ARG,CYT,GUA
+CA   NA  427.0    1.381     !  JCC,7,(1986),230; GUA
+CA   NC  483.0    1.339     !  JCC,7,(1986),230; ADE,CYT,GUA
+CA   OH  450.0    1.364     !  substituted for C-OH in tyr 
+CB   CB  520.0    1.370     !  JCC,7,(1986),230; ADE,GUA
+CB   NS  436.0    1.374     !  JCC,7,(1986),230; ADE,GUA
+CB   NB  414.0    1.391     !  JCC,7,(1986),230; ADE,GUA
+CB   NC  461.0    1.354     !  JCC,7,(1986),230; ADE,GUA
+CD   HA  367.0    1.080     !  Junmei et al, 1999 
+CD   CD  469.0    1.400     !  Junmei et al, 1999
+CD   CM  549.0    1.350     !  Junmei et al, 1999
+CD   CT  317.0    1.510     !  Junmei et al, 1999
+CK   H5  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; ADE,GUA
+CK   NS  440.0    1.371     !  JCC,7,(1986),230; ADE,GUA
+CK   NB  529.0    1.304     !  JCC,7,(1986),230; ADE,GUA
+CM   CM  549.0    1.350     !  JCC,7,(1986),230; CYT,THY,URA
+CM   CT  317.0    1.510     !  JCC,7,(1986),230; THY
+CM   HA  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; CYT,URA
+CM   H4  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; CYT,URA
+CM   H5  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; not assigned
+CM   NS  448.0    1.365     !  JCC,7,(1986),230; CYT,THY,URA
+CM   OS  480.0    1.240     !  Junmei et al, 1999
+CQ   H5  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes; ADE
+CQ   NC  502.0    1.324     !  JCC,7,(1986),230; ADE
+CT   CT  290.7    1.514     !  FB15   JCC,7,(1986),230; AA, SUGARS
+CT   HC  355.5    1.088     !  FB15   changed from 331 bsd on NMA nmodes; AA, SUGARS
+CT   H1  354.5    1.087     !  FB15   changed from 331 bsd on NMA nmodes; AA, RIBOSE
+CT   H2  340.0    1.090     !  changed from 331 bsd on NMA nmodes; SUGARS
+CT   H3  340.0    1.090     !  changed from 331 bsd on NMA nmodes; not assigned
+CT   HP  346.5    1.087     !  FB15   changed from 331; AA-lysine, methyl ammonium cation
+CT   NS  337.0    1.475     !  JCC,7,(1986),230; ADE,CYT,GUA,THY,URA
+CT   N2  336.7    1.459     !  FB15   JCC,7,(1986),230; ARG
+CT   OH  320.5    1.416     !  FB15   JCC,7,(1986),230; SUGARS
+CT   OS  320.0    1.410     !  JCC,7,(1986),230; NUCLEIC ACIDS
+CS   HC  367.0    1.080     !  changed from 340. bsd on C6H6 nmodes, not needed AA
+CS   CB  385.9    1.442     !  FB15   JCC,7,(1986),230; TRP
+CS   CT  315.4    1.491     !  FB15   JCC,7,(1986),230; TRP
+CS   CW  542.2    1.366     !  FB15   JCC,7,(1986),230; TRP
+CB   CN  444.6    1.409     !  FB15   JCC,7,(1986),230; TRP
+CC   CT  314.4    1.483     !  FB15   JCC,7,(1986),230; HIS
+CC   CV  508.9    1.378     !  FB15   JCC,7,(1986),230; HIS(delta)
+CC   CW  514.5    1.374     !  FB15   JCC,7,(1986),230; HIS(epsilon)
+CC   NA  421.2    1.380     !  FB15   JCC,7,(1986),230; HIS
+CC   NB  407.4    1.375     !  FB15   JCC,7,(1986),230; HIS
+CN   NA  426.1    1.387     !  FB15   JCC,7,(1986),230; TRP
+CR   H5  375.3    1.078     !  FB15   changed from 340. bsd on C6H6 nmodes;HIS
+CR   NA  469.7    1.351     !  FB15   JCC,7,(1986),230; HIS
+CR   NB  483.4    1.317     !  FB15   JCC,7,(1986),230; HIS
+CT   N   350.2    1.432     !  FB15   JCC,7,(1986),230; AA
+CT   N3  365.4    1.489     !  FB15   JCC,7,(1986),230; LYS
+CT   NT  367.0    1.471     !  for neutral amines 
+CT   S   227.1    1.814     !  FB15   changed from 222.0 based on dimethylS nmodes
+CT   SH  238.6    1.805     !  FB15   changed from 222.0 based on methanethiol nmodes
+CT   CY  400.0    1.458     !  Howard et al JCC.16,243,1995
+CT   CZ  400.0    1.459     !  Howard et al JCC,16,243,1995
+CV   H4  370.6    1.088     !  FB15   changed from 340. bsd on C6H6 nmodes; HIS
+CV   NB  409.1    1.373     !  FB15   JCC,7,(1986),230; HIS
+CW   H4  375.0    1.077     !  FB15   changed from 340. bsd on C6H6 nmodes;HIS(epsilon,+)
+CW   NA  423.0    1.381     !  FB15   JCC,7,(1986),230; HIS,TRP
+CY   NY  600.0    1.150     !  Howard et al JCC,16,243,1995
+CZ   CZ  600.0    1.206     !  Howard et al JCC,16,243,1995
+CZ   HZ  400.0    1.056     !  Howard et al JCC,16,243,1995
+O2   P   525.0    1.480     !  JCC,7,(1986),230; NA PHOSPHATES
+OH   P   230.0    1.610     !  JCC,7,(1986),230; NA PHOSPHATES
+OS   P   230.0    1.610     !  JCC,7,(1986),230; NA PHOSPHATES
+H    N2  446.0    1.021     !  FB15   JCC,7,(1986),230; ADE,CYT,GUA,ARG
+H    NS  434.0    1.010     !  for plain unmethylated bases ADE,CYT,GUA,ARG
+H    NA  444.8    1.026     !  FB15   JCC,7,(1986),230; GUA,URA,HIS
+H    N   458.9    1.011     !  FB15   JCC,7,(1986),230; AA
+H    N3  421.9    1.035     !  FB15   JCC,7,(1986),230; LYS    
+H    NT  434.0    1.010     !  for neutral amines 
+HO   OH  539.1    0.969     !  FB15   JCC,7,(1986),230; SUGARS,SER,TYR
+HO   OS  553.0    0.960     !  JCC,7,(1986),230; NUCLEOTIDE ENDS
+HS   SH  278.4    1.337     !  FB15   JCC,7,(1986),230; CYS
+S    S   166.0    2.038     !  JCC,7,(1986),230; CYX   (SCHERAGA)
+F    CT  367.0    1.380     !  JCC,13,(1992),963;CF4; R0=1.332 FOR CHF3
+Cl   CT  232.0    1.766     !  6-31g* opt
+Br   CT  159.0    1.944     !  Junmei et al,99 
+I    CT  148.0    2.166     !  Junmei et al,99 
+F    CA  386.0    1.359     !  Junmei et al,99 
+Cl   CA  193.0    1.727     !  Junmei et al,99 
+I    CA  171.0    2.075     !  Junmei et al,99 
+Br   CA  172.0    1.890     !  Junmei et al,99
+LP   O   600.0    0.200     !  or 0.35
+LP   OH  600.0    0.200     !  or 0.35
+LP   OS  600.0    0.200     !  or 0.35
+LP   N3  600.0    0.200     !  or 0.35
+LP   NT  600.0    0.200     !  or 0.35
+LP   NB  600.0    0.200     !  or 0.35 histidines, nucleic acids
+LP   NC  600.0    0.200     !  or 0.35 nucleic acids
+LP   S   600.0    0.700     !  cys,cyx,met
+LP   SH  600.0    0.700     !  cys,cyx
+OX   HX  545.0    0.9700    ! hydroxide ion
+6Y   CA  315.8    1.487     !  FB15 
+6S   CT  290.7    1.514     !  FB15 
+6P   CT  290.7    1.514     !  FB15 
+6J   5j  290.7    1.514     !  FB15 
+6M   HC  355.5    1.088     !  FB15 
+6F   CT  290.7    1.514     !  FB15 
+6I   5i  290.7    1.514     !  FB15 
+6H   CT  290.7    1.514     !  FB15 
+5c   H1  354.5    1.087     !  FB15 
+6E   HC  355.5    1.088     !  FB15 
+6F   HC  355.5    1.088     !  FB15 
+6H   CC  314.4    1.483     !  FB15 
+5d   HC  355.5    1.088     !  FB15 
+6C   SH  238.6    1.805     !  FB15 
+6P   HC  355.5    1.088     !  FB15 
+5t   HC  355.5    1.088     !  FB15 
+5d   CT  290.7    1.514     !  FB15 
+5e   C   275.0    1.509     !  FB15 
+6S   H1  354.5    1.087     !  FB15 
+6W   HC  355.5    1.088     !  FB15 
+6H   HC  355.5    1.088     !  FB15 
+6E   CT  290.7    1.514     !  FB15 
+6W   CT  290.7    1.514     !  FB15 
+6Y   CT  290.7    1.514     !  FB15 
+5P   CC  314.4    1.483     !  FB15 
+6S   OH  320.5    1.416     !  FB15 
+6T   5t  290.7    1.514     !  FB15 
+6L   HC  355.5    1.088     !  FB15 
+6Y   HC  355.5    1.088     !  FB15 
+5j   HC  355.5    1.088     !  FB15 
+6Q   5q  290.7    1.514     !  FB15 
+5q   C   275.0    1.509     !  FB15 
+5c   CT  290.7    1.514     !  FB15 
+6L   CT  290.7    1.514     !  FB15 
+6D   HC  355.5    1.088     !  FB15 
+5c   SH  238.6    1.805     !  FB15 
+6T   H1  354.5    1.087     !  FB15 
+6D   CT  290.7    1.514     !  FB15 
+5k   HC  355.5    1.088     !  FB15 
+6V   CT  290.7    1.514     !  FB15 
+6V   HC  355.5    1.088     !  FB15 
+6N   CT  290.7    1.514     !  FB15 
+6E   5e  290.7    1.514     !  FB15 
+6R   HC  355.5    1.088     !  FB15 
+6K   CT  290.7    1.514     !  FB15 
+6N   HC  355.5    1.088     !  FB15 
+6F   CA  315.8    1.487     !  FB15 
+6C   H1  354.5    1.087     !  FB15 
+6J   HC  355.5    1.088     !  FB15 
+5h   HC  355.5    1.088     !  FB15 
+6C   CT  290.7    1.514     !  FB15 
+6M   CT  290.7    1.514     !  FB15 
+5q   HC  355.5    1.088     !  FB15 
+6R   CT  290.7    1.514     !  FB15 
+5d   C   275.0    1.509     !  FB15 
+6K   HC  355.5    1.088     !  FB15 
+5i   HC  355.5    1.088     !  FB15 
+6J   CT  290.7    1.514     !  FB15 
+6N   C   275.0    1.509     !  FB15 
+5P   CT  290.7    1.514     !  FB15 
+6T   CT  290.7    1.514     !  FB15 
+6T   OH  320.5    1.416     !  FB15 
+5h   CT  290.7    1.514     !  FB15 
+6Q   CT  290.7    1.514     !  FB15 
+5e   HC  355.5    1.088     !  FB15 
+5h   CC  314.4    1.483     !  FB15 
+6Q   HC  355.5    1.088     !  FB15 
+5k   CT  290.7    1.514     !  FB15 
+6I   CT  290.7    1.514     !  FB15 
+6D   C   275.0    1.509     !  FB15 
+5P   HC  355.5    1.088     !  FB15 
+6W   CS  315.4    1.491     !  FB15 
+6I   HC  355.5    1.088     !  FB15 
+5j   C   275.0    1.509     !  FB15 
+
+ANGLES
+HW   OW   HW    100.      104.52  !  TIP3P water
+HW   HW   OW      0.      127.74  !  (found in crystallographic water with 3 bonds)
+C    C    O     80.0      120.00  !  Junmei et al, 1999 acrolein
+C    C    OH    80.0      120.00  !  Junmei et al, 1999
+CA   C    CA    62.9      120.02  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA
+CA   C    OH    69.9      119.98  !  FB15   AA (not used in tyr)
+CB   C    NA    70.0      111.30  !  NA
+CB   C    O     80.0      128.80  !
+CM   C    NA    70.0      114.10  !
+CM   C    O     80.0      125.30  !
+CT   C    O     79.1      121.18  !  FB15 
+CT   C    O2    70.2      117.40  !  FB15 
+CT   C    N     70.1      115.28  !  FB15   AA general
+CT   C    CT    63.0      117.00  !  Junmei et al, 1999
+CT   C    OS    80.0      115.00  !  Junmei et al, 1999
+CT   C    OH    80.1      109.63  !  FB15   Junmei et al, 1999
+NS   C    NA    70.0      115.40  !
+NS   C    NC    70.0      118.60  !
+NS   C    O     80.0      120.90  !
+NA   C    O     80.0      120.60  !
+NC   C    O     80.0      122.50  !
+N    C    O     80.5      122.88  !  FB15   AA general
+O    C    O     80.0      126.00  !  AA COO- terminal residues
+O    C    OH    80.0      121.02  !  FB15   (check with Junmei for: theta0:120.0?)
+O    C    OS    80.0      125.00  !  Junmei et al, 1999
+O2   C    O2    80.5      125.70  !  FB15   AA GLU            (SCH JPC 79,2379)
+H4   C    C     50.0      120.00  !  Junmei et al, 1999 
+H4   C    CM    50.0      115.00  !  Junmei et al, 1999 
+H4   C    CT    50.0      115.00  !  Junmei et al, 1999
+H4   C    O     50.0      120.00  !  Junmei et al, 1999
+H4   C    OH    50.0      120.00  !  Junmei et al, 1999
+H5   C    N     50.0      120.00  !  Junmei et al, 1999
+H5   C    O     50.0      119.00  !  Junmei et al, 1999
+H5   C    OH    50.0      107.00  !  Junmei et al, 1999
+H5   C    OS    50.0      107.00  !  Junmei et al, 1999
+C    CA   CA    62.9      119.97  !  FB15   changed from 85.0  bsd on C6H6 nmodes
+C    CA   HA    49.6      119.93  !  FB15   AA (not used in tyr)
+CA   CA   CA    62.8      120.05  !  FB15   changed from 85.0  bsd on C6H6 nmodes
+CA   CA   CB    62.9      119.91  !  FB15   changed from 85.0  bsd on C6H6 nmodes
+CA   CA   CT    69.8      120.38  !  FB15 
+CA   CA   HA    46.3      119.62  !  FB15 
+CA   CA   H4    50.0      120.00  !
+CA   CA   OH    70.0      120.00  !  replacement in tyr
+CA   CA   CN    62.9      119.97  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+CB   CA   HA    49.8      119.94  !  FB15 
+CB   CA   H4    50.0      120.00  !
+CB   CA   N2    70.0      123.50  !
+CB   CA   NC    70.0      117.30  !
+CM   CA   N2    70.0      120.10  !
+CM   CA   NC    70.0      121.50  !
+CN   CA   HA    49.8      120.10  !  FB15   AA trp
+NA   CA   NC    70.0      123.30  !
+N2   CA   NA    70.0      116.00  !
+N2   CA   NC    70.0      119.30  !
+N2   CA   N2    69.9      120.01  !  FB15   AA arg
+F    CA   CA    70.0      121.00  !  Junmei et al,99 
+Cl   CA   CA    70.0      118.80  !  Junmei et al,99 
+Br   CA   CA    70.0      118.80  !  Junmei et al,99
+I    CA   CA    70.0      118.80  !  Junmei et al,99 
+C    CB   CB    63.0      119.20  !  changed from 85.0  bsd on C6H6 nmodes; NA gua
+C    CB   NB    70.0      130.00  !
+CA   CB   CB    63.0      117.30  !  changed from 85.0  bsd on C6H6 nmodes; NA ade
+CA   CB   NB    70.0      132.40  !  
+CB   CB   NS    70.0      106.20  !
+CB   CB   NB    70.0      110.40  !
+CB   CB   NC    70.0      127.70  !
+CS   CB   CA    62.9      134.72  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+CS   CB   CN    62.9      108.74  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+CA   CB   CN    62.9      116.43  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+NS   CB   NC    70.0      126.20  !
+CD   CD   CM    63.0      120.00  !  Junmei et al, 1999
+CD   CD   CT    70.0      120.00  !  Junmei et al, 1999
+CM   CD   CT    70.0      120.00  !  Junmei et al, 1999
+HA   CD   HA    35.0      119.00  !  Junmei et al, 1999
+HA   CD   CD    50.0      120.00  !  Junmei et al, 1999
+HA   CD   CM    50.0      120.00  !  Junmei et al, 1999
+H5   CK   NS    50.0      123.05  !
+H5   CK   NB    50.0      123.05  !
+NS   CK   NB    70.0      113.90  !
+C    CM   CM    63.0      120.70  !  changed from 85.0  bsd on C6H6 nmodes; NA thy
+C    CM   CT    70.0      119.70  !
+C    CM   HA    50.0      119.70  !
+C    CM   H4    50.0      119.70  !
+CA   CM   CM    63.0      117.00  !  changed from 85.0  bsd on C6H6 nmodes; NA cyt
+CA   CM   HA    50.0      123.30  !
+CA   CM   H4    50.0      123.30  !
+CM   CM   CT    70.0      119.70  !
+CM   CM   HA    50.0      119.70  !
+CM   CM   H4    50.0      119.70  !
+CM   CM   NS    70.0      121.20  !
+CM   CM   OS    80.0      125.00  !  Junmei et al, 1999
+H4   CM   NS    50.0      119.10  !
+H4   CM   OS    50.0      113.00  !  Junmei et al, 1999
+HA   CM   HA    35.0      120.00  !  Junmei et al, 1999
+HA   CM   CD    50.0      120.00  !  Junmei et al, 1999
+HA   CM   CT    50.0      120.00  !  Junmei et al, 1999
+NC   CQ   NC    70.0      129.10  !
+H5   CQ   NC    50.0      115.45  !
+H1   CT   H1    36.6      110.06  !  FB15 
+H1   CT   NS    50.0      109.50  !  changed based on NMA nmodes
+H1   CT   OH    49.9      109.41  !  FB15   changed based on NMA nmodes 
+H1   CT   OS    50.0      109.50  !  changed based on NMA nmodes 
+H1   CT   CM    50.0      109.50  !  Junmei et al, 1999 
+H1   CT   CY    50.0      110.00  !  Junmei et al, 1999
+H1   CT   CZ    50.0      110.00  !  Junmei et al, 1999
+H1   CT   N     50.4      109.45  !  FB15   AA general  changed based on NMA nmodes
+H1   CT   S     49.6      109.28  !  FB15   AA cys     changed based on NMA nmodes
+H1   CT   SH    49.7      109.19  !  FB15   AA cyx     changed based on NMA nmodes
+H1   CT   N2    49.8      109.78  !  FB15   AA arg     changed based on NMA nmodes
+H1   CT   NT    50.0      109.50  !  neutral amines 
+H2   CT   H2    35.0      109.50  !  AA lys
+H2   CT   NS    50.0      109.50  !  changed based on NMA nmodes
+H2   CT   OS    50.0      109.50  !  changed based on NMA nmodes
+HP   CT   HP    34.9      109.40  !  FB15   AA lys, ch3nh4+
+HP   CT   N3    50.0      109.24  !  FB15   AA lys, ch3nh3+, changed based on NMA nmodes
+HC   CT   HC    35.3      108.15  !  FB15 
+HC   CT   CM    50.0      109.50  !  changed based on NMA nmodes
+HC   CT   CD    50.0      109.50  !  Junmei et al, 1999
+HC   CT   CZ    50.0      110.00  !  Junmei et al, 1999
+C    CT   H1    48.4      110.53  !  FB15   AA general  changed based on NMA nmodes
+C    CT   HP    50.0      109.50  !  AA zwitterion  changed based on NMA nmodes
+C    CT   HC    47.9      108.02  !  FB15   AA gln      changed based on NMA nmodes
+C    CT   N     62.5      106.98  !  FB15   AA general
+C    CT   N3    80.0      111.20  !  AA amino terminal residues
+C    CT   CT    60.3      111.13  !  FB15   AA general
+C    CT   OS    60.0      109.50  !  Junmei et al, 1999
+CA   CT   HC    49.6      110.27  !  FB15   AA tyr     changed based on NMA nmodes
+CC   CT   CT    63.1      112.83  !  FB15   AA his
+CC   CT   HC    49.7      110.03  !  FB15   AA his     changed based on NMA nmodes
+CM   CT   CT    63.0      111.00  !  Junmei et al, 1999 (last change: Mar24,99)
+CM   CT   OS    50.0      109.50  !  Junmei et al, 1999
+CT   CT   CT    42.0      109.66  !  FB15 
+CT   CT   HC    46.7      109.28  !  FB15   changed based on NMA nmodes
+CT   CT   H1    48.5      111.20  !  FB15   changed based on NMA nmodes
+CT   CT   H2    50.0      109.50  !  changed based on NMA nmodes
+CT   CT   HP    50.1      109.82  !  FB15   changed based on NMA nmodes
+CT   CT   NS    50.0      109.50  !
+CT   CT   OH    50.2      109.85  !  FB15 
+CT   CT   OS    50.0      109.50  !
+CT   CT   S     50.0      114.45  !  FB15   AA cyx            (SCHERAGA  JPC 79,1428)
+CT   CT   SH    49.6      109.26  !  FB15   AA cys
+CT   CT   CA    62.8      112.57  !  FB15   AA phe tyr          (SCH JPC  79,2379)
+CT   CT   N2    79.9      109.93  !  FB15   AA arg             (JCP 76, 1439)
+CT   CT   N     79.8      110.50  !  FB15   AA ala, general    (JACS 94, 2657)
+CT   CT   N3    79.9      111.33  !  FB15   AA lys             (JCP 76, 1439)
+CT   CT   NT    80.0      111.20  !  neutral amines 
+CT   CT   CY    63.0      110.00  !  Junmei et al, 1999    
+CT   CT   CZ    63.0      110.00  !  Junmei et al, 1999
+CS   CT   CT    62.8      115.00  !  FB15   AA trp
+CS   CT   HC    49.8      109.86  !  FB15   AA trp    changed based on NMA nmodes
+OS   CT   OS   60.0      101.00  !  FB15   Junmei et al, 1999
+OS   CT   CY    50.0      110.00  !  Junmei et al, 1999
+OS   CT   CZ    50.0      110.00  !  Junmei et al, 1999
+OS   CT   NS    50.0      109.50  !
+F    CT   F     77.0      109.10  !  JCC,13,(1992),963;
+F    CT   H1    50.0      109.50  !  JCC,13,(1992),963;
+F    CT   CT    50.0      109.00  !  
+F    CT   H2    50.0      109.50  !
+Cl   CT   CT    50.0      108.50  !  (6-31g* opt value)
+Cl   CT   H1    50.0      108.50  !  (6-31g* opt value)  
+Br   CT   CT    50.0      108.00  !  Junmei et al 99 
+Br   CT   H1    50.0      106.50  !  Junmei et al 99 
+I    CT   CT    50.0      106.00  !  Junmei et al,99 
+CT   CC   NA    70.6      118.47  !  FB15   AA his
+CT   CC   CV    69.2      120.91  !  FB15   AA his
+CT   CC   NB    69.9      120.05  !  FB15   AA his
+CV   CC   NA    69.8      119.84  !  FB15   AA his
+CW   CC   NA    70.0      119.98  !  FB15   AA his
+CW   CC   NB    70.1      120.14  !  FB15   AA his
+CT   CC   CW    69.2      120.78  !  FB15   AA his
+H5   CR   NA    49.7      119.59  !  FB15   AA his
+H5   CR   NB    49.3      120.26  !  FB15   AA his
+NA   CR   NA    70.0      120.01  !  FB15   AA his
+NA   CR   NB    70.1      120.17  !  FB15   AA his
+CC   CV   H4    49.8      119.89  !  FB15   AA his
+CC   CV   NB    70.3      120.34  !  FB15   AA his
+H4   CV   NB    49.8      119.84  !  FB15   AA his
+CC   CW   H4    49.3      120.38  !  FB15   AA his
+CC   CW   NA    69.8      119.86  !  FB15   AA his
+CS   CW   H4    49.6      120.13  !  FB15   AA trp
+CS   CW   NA    69.9      108.77  !  FB15   AA trp
+H4   CW   NA    49.8      119.53  !  FB15   AA his
+CB   CS   CT    69.9      128.41  !  FB15   AA trp
+CB   CS   CW    62.9      106.45  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+CT   CS   CW    69.9      124.96  !  FB15   AA trp
+CA   CN   CB    62.9      122.62  !  FB15   changed from 85.0  bsd on C6H6 nmodes; AA trp
+CA   CN   NA    69.9      132.58  !  FB15   AA trp
+CB   CN   NA    69.9      104.72  !  FB15   AA trp
+CT   CY   NY    80.0      180.00  !  Junmei et al, 1999
+CT   CZ   CZ    80.0      180.00  !  Junmei et al, 1999
+CZ   CZ   HZ    50.0      180.00  !  Junmei et al, 1999
+C    N    CT    49.0      116.75  !  FB15   AA general
+C    N    H     43.2      121.17  !  FB15   AA general, gln, asn,changed based on NMA nmodes
+CT   N    H     43.0      117.09  !  FB15   AA general,     changed based on NMA nmodes
+CT   N    CT    49.6      117.61  !  FB15   AA pro             (DETAR JACS 99,1232)
+H    N    H     34.5      119.50  !  FB15   ade,cyt,gua,gln,asn     **
+C    NS   CM    70.0      121.60  !
+C    NS   CT    70.0      117.60  !
+C    NS   H     50.0      119.20  !  changed based on NMA nmodes
+CB   NS   CK    70.0      105.40  !
+CB   NS   CT    70.0      125.80  !
+CB   NS   H     50.0      125.80  !  for unmethylated n.a. bases,chngd bsd NMA nmodes
+CK   NS   CT    70.0      128.80  !
+CK   NS   H     50.0      128.80  !  for unmethylated n.a. bases,chngd bsd NMA nmodes
+CM   NS   CT    70.0      121.20  !
+CM   NS   H     50.0      121.20  !  for unmethylated n.a. bases,chngd bsd NMA nmodes
+CA   N2   H     50.2      121.23  !  FB15   
+CA   N2   CT    49.8      123.57  !  FB15   AA arg
+CT   N2   H     50.3      116.53  !  FB15   AA arg
+H    N2   H     34.7      120.13  !  FB15   
+CT   N3   H     50.3      108.47  !  FB15   AA lys,     changed based on NMA nmodes
+CT   N3   CT    50.0      109.50  !  AA pro/nt
+H    N3   H     36.3      110.38  !  FB15   AA lys, AA(end)
+CT   NT   H     50.0      109.50  !  neutral amines 
+CT   NT   CT    50.0      109.50  !  neutral amines 
+H    NT   H     35.0      109.50  !  neutral amines 
+C    NA   C     70.0      126.40  !
+C    NA   CA    70.0      125.20  !
+C    NA   H     50.0      116.80  !  changed based on NMA nmodes
+CA   NA   H     50.0      118.00  !  changed based on NMA nmodes
+CC   NA   CR    70.0      119.99  !  FB15   AA his
+CC   NA   H     50.1      118.44  !  FB15   AA his,    changed based on NMA nmodes
+CR   NA   CW    69.8      119.81  !  FB15   AA his
+CR   NA   H     48.3      121.47  !  FB15   AA his,    changed based on NMA nmodes
+CW   NA   H     49.2      120.36  !  FB15   AA his,    changed based on NMA nmodes
+CN   NA   CW    69.9      111.21  !  FB15   AA trp
+CN   NA   H     49.7      123.22  !  FB15   AA trp,    changed based on NMA nmodes
+CB   NB   CK    70.0      103.80  !
+CC   NB   CR    70.0      117.00  !  AA his
+CR   NB   CV    69.9      116.90  !  FB15   AA his
+C    NC   CA    70.0      120.50  !
+CA   NC   CB    70.0      112.20  !
+CA   NC   CQ    70.0      118.60  !
+CB   NC   CQ    70.0      111.00  !
+C    OH   HO    49.5      112.14  !  FB15   (not used in tyr anymore)
+CA   OH   HO    50.0      113.00  !  replacement in tyr
+CT   OH   HO    54.9      107.61  !  FB15 
+HO   OH   P     45.0      108.50  !
+C    OS   CT    60.0      117.00  !  Junmei et al, 1999
+CM   OS   CT    60.0      117.00  !  Junmei et al, 1999
+CT   OS   CT    60.0      109.50  !
+CT   OS   P    100.0      120.50  !
+P    OS   P    100.0      120.50  !
+O2   P    OH    45.0      108.23  !
+O2   P    O2   140.0      119.90  !
+O2   P    OS   100.0      108.23  !
+OH   P    OS    45.0      102.60  !
+OS   P    OS    45.0      102.60  !
+CT   S    CT    61.9       98.90  !  FB15   AA met
+CT   S    S     68.0      103.70  !  AA cyx             (SCHERAGA  JPC 79,1428)
+CT   SH   HS    43.1       96.00  !  FB15   changed from 44.0 based on methanethiol nmodes
+HS   SH   HS    35.0       92.07  !  AA cys
+CB   NB   LP   150.0       126.0  !  NA
+CC   NB   LP   150.0       126.0  !  his,NA
+CK   NB   LP   150.0       126.0  !  NA
+CR   NB   LP   150.0       126.0  !  his,NA
+CV   NB   LP   150.0       126.0  !  his,NA
+C    NC   LP   150.0       120.0  !  NA
+CA   NC   LP   150.0       120.0  !  NA
+CB   NC   LP   150.0       120.0  !  NA
+CQ   NC   LP   150.0       120.0  !  NA
+CT   N3   LP   150.0       109.5  !  in neutral lysine
+H    N3   LP   150.0       109.5  !  in neutral lysine
+CT   NT   LP   150.0       109.5  !
+H    NT   LP   150.0       109.5  !
+C    O    LP   150.0       120.0  !
+LP   O    LP   150.0       120.0  !
+C    OH   LP   150.0       120.0  !
+CT   OH   LP   150.0       109.5  !
+HO   OH   LP   150.0       109.5  !
+LP   OH   LP   150.0       109.5  !
+C    OS   LP   150.0       109.5  !
+CM   OS   LP   150.0       109.5  !  methyl vinyl ether
+CT   OS   LP   150.0       109.5  !
+LP   OS   LP   150.0       109.5  !
+CT   S    LP   150.0        90.0  !  cys,cyx,met
+CT   SH   LP   150.0        90.0  !  cys,cyx,met
+P    OS   LP   150.0       109.5  !  NA
+LP   S    LP   150.0       180.0  !  cys,cyx,met
+LP   SH   LP   150.0       180.0  !  cys,cyx,met
+HS   SH   LP   150.0        90.0  !  cys  
+CT   5d   HC    46.7      109.28  !  FB15 
+HC   6L   HC    35.3      108.15  !  FB15 
+CC   6H   HC    49.7      110.03  !  FB15 
+C    5e   HC    47.9      108.02  !  FB15 
+5t   6T   OH    50.2      109.85  !  FB15 
+6K   CT   HP    50.1      109.82  !  FB15 
+5i   6I   CT    42.0      109.66  !  FB15 
+6W   CS   CB    69.9      128.41  !  FB15 
+CT   6T   H1    48.5      111.20  !  FB15 
+6R   CT   HC    46.7      109.28  !  FB15 
+6N   CT   N3    79.9      111.33  !  FB15 
+6M   CT   HP    50.1      109.82  !  FB15 
+6K   CT   CT    42.0      109.66  !  FB15 
+6J   CT   N     79.8      110.50  !  FB15 
+HC   5d   HC    35.3      108.15  !  FB15 
+6D   CT   C     60.3      111.13  !  FB15 
+C    6N   CT    60.3      111.13  !  FB15 
+6N   CT   H1    48.5      111.20  !  FB15 
+CT   6V   HC    46.7      109.28  !  FB15 
+6W   CT   N3    79.9      111.33  !  FB15 
+5d   CT   H1    48.5      111.20  !  FB15 
+6P   CT   N3    79.9      111.33  !  FB15 
+6R   CT   C     60.3      111.13  !  FB15 
+6M   CT   N     79.8      110.50  !  FB15 
+CT   5P   HC    46.7      109.28  !  FB15 
+6K   CT   N3    79.9      111.33  !  FB15 
+CT   6N   HC    46.7      109.28  !  FB15 
+6W   CT   H1    48.5      111.20  !  FB15 
+CA   6Y   CT    62.8      112.57  !  FB15 
+6E   5e   HC    46.7      109.28  !  FB15 
+CT   6P   CT    42.0      109.66  !  FB15 
+C    6D   CT    60.3      111.13  !  FB15 
+6V   CT   N     79.8      110.50  !  FB15 
+CT   6Y   HC    46.7      109.28  !  FB15 
+5e   C    O2    70.2      117.40  !  FB15 
+6Y   CT   N3    79.9      111.33  !  FB15 
+6H   CT   H1    48.5      111.20  !  FB15 
+5k   CT   N     79.8      110.50  !  FB15 
+6D   CT   H1    48.5      111.20  !  FB15 
+HC   6M   HC    35.3      108.15  !  FB15 
+6M   CT   C     60.3      111.13  !  FB15 
+6C   CT   N     79.8      110.50  !  FB15 
+C    5d   HC    47.9      108.02  !  FB15 
+CT   6L   CT    42.0      109.66  !  FB15 
+HC   5q   HC    35.3      108.15  !  FB15 
+6P   CT   H1    48.5      111.20  !  FB15 
+5d   C    O     79.1      121.18  !  FB15 
+6D   CT   HP    50.1      109.82  !  FB15 
+6S   CT   C     60.3      111.13  !  FB15 
+6K   CT   H1    48.5      111.20  !  FB15 
+CT   5h   HC    46.7      109.28  !  FB15 
+5P   CT   H1    48.5      111.20  !  FB15 
+HC   6H   HC    35.3      108.15  !  FB15 
+6C   SH   HS    43.1       96.00  !  FB15 
+CA   6F   HC    49.6      110.27  !  FB15 
+6T   CT   C     60.3      111.13  !  FB15 
+6N   CT   N     79.8      110.50  !  FB15 
+CT   5c   SH    49.6      109.26  !  FB15 
+6D   CT   N3    79.9      111.33  !  FB15 
+6I   CT   HP    50.1      109.82  !  FB15 
+5q   6Q   HC    46.7      109.28  !  FB15 
+6K   CT   C     60.3      111.13  !  FB15 
+5h   CT   N3    79.9      111.33  !  FB15 
+5P   CC   CW    69.2      120.78  !  FB15 
+6J   CT   H1    48.5      111.20  !  FB15 
+5d   CT   C     60.3      111.13  !  FB15 
+6T   5t   HC    46.7      109.28  !  FB15 
+5j   6J   CT    42.0      109.66  !  FB15 
+H1   5c   H1    36.6      110.06  !  FB15 
+6F   CT   HP    50.1      109.82  !  FB15 
+5P   CT   N     79.8      110.50  !  FB15 
+6F   CT   C     60.3      111.13  !  FB15 
+6I   CT   H1    48.5      111.20  !  FB15 
+6R   CT   H1    48.5      111.20  !  FB15 
+CT   5k   CT    42.0      109.66  !  FB15 
+HC   5h   HC    35.3      108.15  !  FB15 
+CT   5c   H1    48.5      111.20  !  FB15 
+6H   CT   C     60.3      111.13  !  FB15 
+6T   CT   H1    48.5      111.20  !  FB15 
+CC   6H   CT    63.1      112.83  !  FB15 
+6V   CT   C     60.3      111.13  !  FB15 
+6L   CT   N     79.8      110.50  !  FB15 
+6H   CT   HP    50.1      109.82  !  FB15 
+CT   6M   HC    46.7      109.28  !  FB15 
+6R   CT   HP    50.1      109.82  !  FB15 
+H1   5c   SH    49.7      109.19  !  FB15 
+6T   CT   HP    50.1      109.82  !  FB15 
+6V   CT   HC    46.7      109.28  !  FB15 
+6J   CT   C     60.3      111.13  !  FB15 
+6W   CT   N     79.8      110.50  !  FB15 
+5t   6T   H1    48.5      111.20  !  FB15 
+5k   CT   CT    42.0      109.66  !  FB15 
+CT   6C   H1    48.5      111.20  !  FB15 
+6E   CT   N     79.8      110.50  !  FB15 
+6V   CT   H1    48.5      111.20  !  FB15 
+C    5d   CT    60.3      111.13  !  FB15 
+6R   CT   CT    42.0      109.66  !  FB15 
+6L   CT   HC    46.7      109.28  !  FB15 
+6L   CT   C     60.3      111.13  !  FB15 
+H1   6S   OH    49.9      109.41  !  FB15 
+6D   CT   N     79.8      110.50  !  FB15 
+HC   5e   HC    35.3      108.15  !  FB15 
+CT   6D   HC    46.7      109.28  !  FB15 
+HC   6W   HC    35.3      108.15  !  FB15 
+6H   CT   N     79.8      110.50  !  FB15 
+6C   CT   H1    48.5      111.20  !  FB15 
+5i   6I   HC    46.7      109.28  !  FB15 
+6Y   CT   N     79.8      110.50  !  FB15 
+5h   CC   CW    69.2      120.78  !  FB15 
+6N   C    N     70.1      115.28  !  FB15 
+5q   C    N     70.1      115.28  !  FB15 
+HC   6K   HC    35.3      108.15  !  FB15 
+6Y   CT   HP    50.1      109.82  !  FB15 
+H1   6T   OH    49.9      109.41  !  FB15 
+5q   6Q   CT    42.0      109.66  !  FB15 
+HC   6Q   HC    35.3      108.15  !  FB15 
+6S   CT   N     79.8      110.50  !  FB15 
+6L   CT   H1    48.5      111.20  !  FB15 
+CT   6R   HC    46.7      109.28  !  FB15 
+5d   CT   N     79.8      110.50  !  FB15 
+6F   CT   H1    48.5      111.20  !  FB15 
+5t   6T   CT    42.0      109.66  !  FB15 
+H1   6S   H1    36.6      110.06  !  FB15 
+6L   CT   N3    79.9      111.33  !  FB15 
+5P   CT   C     60.3      111.13  !  FB15 
+CC   5P   HC    49.7      110.03  !  FB15 
+HC   5j   HC    35.3      108.15  !  FB15 
+CT   6S   H1    48.5      111.20  !  FB15 
+5k   CT   HC    46.7      109.28  !  FB15 
+6R   CT   N     79.8      110.50  !  FB15 
+6L   CT   CT    42.0      109.66  !  FB15 
+CT   6P   HC    46.7      109.28  !  FB15 
+6J   5j   C     60.3      111.13  !  FB15 
+6Y   CT   H1    48.5      111.20  !  FB15 
+5P   CT   N3    79.9      111.33  !  FB15 
+HC   6J   HC    35.3      108.15  !  FB15 
+HC   6P   HC    35.3      108.15  !  FB15 
+6E   CT   HP    50.1      109.82  !  FB15 
+CT   6K   HC    46.7      109.28  !  FB15 
+CT   6S   OH    50.2      109.85  !  FB15 
+CA   6Y   HC    49.6      110.27  !  FB15 
+CC   5h   HC    49.7      110.03  !  FB15 
+6E   CT   C     60.3      111.13  !  FB15 
+6H   CC   CV    69.2      120.91  !  FB15 
+6C   CT   N3    79.9      111.33  !  FB15 
+CT   6W   HC    46.7      109.28  !  FB15 
+6C   CT   C     60.3      111.13  !  FB15 
+6S   OH   HO    54.9      107.61  !  FB15 
+6F   CT   N     79.8      110.50  !  FB15 
+6J   5j   HC    46.7      109.28  !  FB15 
+5P   CC   NA    70.6      118.47  !  FB15 
+6Q   5q   HC    46.7      109.28  !  FB15 
+6C   CT   HP    50.1      109.82  !  FB15 
+CT   6R   CT    42.0      109.66  !  FB15 
+6E   CT   H1    48.5      111.20  !  FB15 
+6N   CT   C     60.3      111.13  !  FB15 
+6L   CT   HP    50.1      109.82  !  FB15 
+HC   6D   HC    35.3      108.15  !  FB15 
+6I   CT   N     79.8      110.50  !  FB15 
+6S   CT   HP    50.1      109.82  !  FB15 
+CC   5P   CT    63.1      112.83  !  FB15 
+6E   CT   N3    79.9      111.33  !  FB15 
+6E   5e   C     60.3      111.13  !  FB15 
+6T   CT   N3    79.9      111.33  !  FB15 
+CS   6W   HC    49.8      109.86  !  FB15 
+CT   6C   SH    49.6      109.26  !  FB15 
+5j   C    O     79.1      121.18  !  FB15 
+C    6N   HC    47.9      108.02  !  FB15 
+CT   6K   CT    42.0      109.66  !  FB15 
+CA   6F   CT    62.8      112.57  !  FB15 
+6H   CT   N3    79.9      111.33  !  FB15 
+6N   C    O     79.1      121.18  !  FB15 
+CT   6M   CT    42.0      109.66  !  FB15 
+6R   CT   N3    79.9      111.33  !  FB15 
+6I   CT   HC    46.7      109.28  !  FB15 
+CS   6W   CT    62.8      115.00  !  FB15 
+5e   6E   CT    42.0      109.66  !  FB15 
+6K   CT   HC    46.7      109.28  !  FB15 
+5P   CT   HP    50.1      109.82  !  FB15 
+6I   CT   N3    79.9      111.33  !  FB15 
+5j   C    OH    80.1      109.63  !  FB15 
+CT   6F   HC    46.7      109.28  !  FB15 
+6Y   CT   C     60.3      111.13  !  FB15 
+C    6D   HC    47.9      108.02  !  FB15 
+CT   6T   OH    50.2      109.85  !  FB15 
+HC   5P   HC    35.3      108.15  !  FB15 
+5h   CT   HP    50.1      109.82  !  FB15 
+5h   CT   N     79.8      110.50  !  FB15 
+CT   6Q   HC    46.7      109.28  !  FB15 
+6V   CT   HP    50.1      109.82  !  FB15 
+5e   6E   HC    46.7      109.28  !  FB15 
+6P   CT   HC    46.7      109.28  !  FB15 
+6Y   CA   CA    69.8      120.38  !  FB15 
+CT   6H   HC    46.7      109.28  !  FB15 
+HC   6E   HC    35.3      108.15  !  FB15 
+6Q   CT   HP    50.1      109.82  !  FB15 
+HC   6Y   HC    35.3      108.15  !  FB15 
+6W   CS   CW    69.9      124.96  !  FB15 
+HC   6F   HC    35.3      108.15  !  FB15 
+HC   5i   HC    35.3      108.15  !  FB15 
+6Q   CT   N     79.8      110.50  !  FB15 
+6I   CT   CT    42.0      109.66  !  FB15 
+6S   CT   H1    48.5      111.20  !  FB15 
+6M   CT   S     50.0      114.45  !  FB15 
+H1   6C   H1    36.6      110.06  !  FB15 
+6I   5i   HC    46.7      109.28  !  FB15 
+6I   CT   C     60.3      111.13  !  FB15 
+6P   CT   CT    42.0      109.66  !  FB15 
+5h   CT   H1    48.5      111.20  !  FB15 
+6K   CT   N     79.8      110.50  !  FB15 
+5q   C    O     79.1      121.18  !  FB15 
+HC   5t   HC    35.3      108.15  !  FB15 
+5c   CT   H1    48.5      111.20  !  FB15 
+CT   6V   CT    42.0      109.66  !  FB15 
+6M   CT   H1    48.5      111.20  !  FB15 
+5j   6J   HC    46.7      109.28  !  FB15 
+HC   6N   HC    35.3      108.15  !  FB15 
+5k   CT   C     60.3      111.13  !  FB15 
+HC   5k   HC    35.3      108.15  !  FB15 
+CT   6I   CT    42.0      109.66  !  FB15 
+5h   CT   C     60.3      111.13  !  FB15 
+6D   C    O2    70.2      117.40  !  FB15 
+6F   CA   CA    69.8      120.38  !  FB15 
+CC   5h   CT    63.1      112.83  !  FB15 
+6F   CT   N3    79.9      111.33  !  FB15 
+6N   CT   HP    50.1      109.82  !  FB15 
+5d   C    OH    80.1      109.63  !  FB15 
+6H   CC   NA    70.6      118.47  !  FB15 
+6T   OH   HO    54.9      107.61  !  FB15 
+5k   CT   H1    48.5      111.20  !  FB15 
+6P   CT   N     79.8      110.50  !  FB15 
+6Q   CT   C     60.3      111.13  !  FB15 
+5c   CT   C     60.3      111.13  !  FB15 
+CT   6I   HC    46.7      109.28  !  FB15 
+CT   6J   HC    46.7      109.28  !  FB15 
+6T   CT   N     79.8      110.50  !  FB15 
+C    5j   HC    47.9      108.02  !  FB15 
+C    5q   HC    47.9      108.02  !  FB15 
+6Q   CT   H1    48.5      111.20  !  FB15 
+6Q   5q   C     60.3      111.13  !  FB15 
+CT   6E   HC    46.7      109.28  !  FB15 
+6M   CT   N3    79.9      111.33  !  FB15 
+6W   CT   HP    50.1      109.82  !  FB15 
+HC   6R   HC    35.3      108.15  !  FB15 
+6S   CT   N3    79.9      111.33  !  FB15 
+6W   CT   C     60.3      111.13  !  FB15 
+CT   6L   HC    46.7      109.28  !  FB15 
+6Q   CT   N3    79.9      111.33  !  FB15 
+6V   CT   N3    79.9      111.33  !  FB15 
+5h   CC   NB    69.9      120.05  !  FB15 
+5c   CT   N     79.8      110.50  !  FB15 
+H1   6C   SH    49.7      109.19  !  FB15 
+CT   5k   HC    46.7      109.28  !  FB15 
+6P   CT   HP    50.1      109.82  !  FB15 
+6P   CT   C     60.3      111.13  !  FB15 
+
+DIHEDRALS
+X   C   C   X    180.000000     2   3.625   !  FB15   Junmei et al, 1999
+X   C   CA  X    177.209471     2   3.587   !  FB15   intrpol.bsd.on C6H6
+X   C   CB  X    180.000000     2   3.000   !  FB15   intrpol.bsd.on C6H6
+X   C   CM  X    180.000000     2   2.175   !  FB15   intrpol.bsd.on C6H6
+X   C   CT  X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   C   N   X    181.512096     2   1.864   !  FB15   AA,NMA
+X   C   NS  X    180.000000     2   1.450   !  FB15   JCC,7,(1986),230
+X   C   NA  X    180.000000     2   1.350   !  FB15   JCC,7,(1986),230
+X   C   NC  X    180.000000     2   4.000   !  FB15   JCC,7,(1986),230
+X   C   O   X    180.000000     2   2.800   !  FB15   Junmei et al, 1999
+X   C   OH  X    181.912691     2   2.181   !  FB15   Junmei et al, 1999
+X   C   OS  X    180.000000     2   2.700   !  FB15   Junmei et al, 1999
+X   CA  CA  X    182.539220     2   3.182   !  FB15   intrpol.bsd.on C6H6
+X   CA  CB  X    174.973438     2   3.502   !  FB15   intrpol.bsd.on C6H6
+X   CA  CM  X    180.000000     2   2.550   !  FB15   intrpol.bsd.on C6H6
+X   CA  CN  X    176.969999     2   3.617   !  FB15   reinterpolated 93'
+X   CA  CT  X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   CA  N2  X    187.574044     2   1.703   !  FB15   reinterpolated 93'
+X   CA  NA  X    180.000000     2   1.500   !  FB15   JCC,7,(1986),230
+X   CA  NC  X    180.000000     2   4.800   !  FB15   JCC,7,(1986),230
+X   CA  OH  X    180.000000     2   0.900   !  FB15   Junmei et al, 99
+X   CB  CB  X    180.000000     2   5.450   !  FB15   intrpol.bsd.on C6H6
+X   CB  CN  X    188.290349     2   3.039   !  FB15   reinterpolated 93'
+X   CB  NS  X    180.000000     2   1.650   !  FB15   JCC,7,(1986),230
+X   CB  NB  X    180.000000     2   2.550   !  FB15   JCC,7,(1986),230
+X   CB  NC  X    180.000000     2   4.150   !  FB15   JCC,7,(1986),230
+X   CC  CT  X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   CC  CV  X    168.303512     2   5.123   !  FB15   intrpol.bsd.on C6H6
+X   CC  CW  X    167.716658     2   5.523   !  FB15   intrpol.bsd.on C6H6
+X   CC  NA  X    186.119292     2   1.804   !  FB15   JCC,7,(1986),230
+X   CC  NB  X    165.625756     2   2.428   !  FB15   JCC,7,(1986),230
+X   CD  CD  X    180.000000     2   1.000   !  FB15   Junmei et al, 1999
+X   CD  CT  X    0.00000000     2   0.000   !  Junmei et al, 1999
+X   CD  CM  X    180.000000     2   6.650   !  FB15   Junmei et al, 1999
+X   CK  NS  X    180.000000     2   1.700   !  FB15   JCC,7,(1986),230
+X   CK  NB  X    180.000000     2   10.00   !  FB15   JCC,7,(1986),230
+X   CM  CM  X    180.000000     2   6.650   !  FB15   intrpol.bsd.on C6H6
+X   CM  CT  X    0.00000000     3   0.000   !  JCC,7,(1986),230
+X   CM  NS  X    180.000000     2   1.850   !  FB15   JCC,7,(1986),230
+X   CM  OS  X    180.000000     2   1.050   !  FB15   Junmei et al, 1999
+X   CN  NA  X    190.913196     2   1.499   !  FB15   reinterpolated 93'
+X   CQ  NC  X    180.000000     2   6.800   !  FB15   JCC,7,(1986),230
+X   CT  CT  X    3.79678962     3   0.179   !  FB15   JCC,7,(1986),230
+X   CT  CY  X    0.00000000     1   0.000   !  Junmei et al, 1999
+X   CT  CZ  X    0.00000000     1   0.000   !  Junmei et al, 1999
+X   CT  N   X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   CT  NS  X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   CT  N2  X    0.00000000     3   0.000   !  JCC,7,(1986),230
+X   CT  NT  X    0.00000000     3   0.300   !  FB15   Junmei et al, 1999
+X   CT  N3  X    4.95693806     3   0.193   !  FB15   JCC,7,(1986),230
+X   CT  OH  X    -1.2860925     3   0.392   !  FB15   JCC,7,(1986),230
+X   CT  OS  X    0.00000000     3   0.383   !  FB15   JCC,7,(1986),230
+X   CT  S   X    5.44856163     3   0.203   !  FB15   JCC,7,(1986),230
+X   CT  SH  X    0.94733300     3   0.376   !  FB15   JCC,7,(1986),230
+X   CS  CB  X    183.156832     2   1.603   !  FB15   intrpol.bsd.onC6H6aa
+X   CS  CT  X    0.00000000     2   0.000   !  JCC,7,(1986),230
+X   CS  CW  X    182.698247     2   6.383   !  FB15   intrpol.bsd.on C6H6
+X   CR  NA  X    202.060990     2   2.472   !  FB15   JCC,7,(1986),230
+X   CR  NB  X    175.126692     2   5.024   !  FB15   JCC,7,(1986),230
+X   CV  NB  X    178.479455     2   2.410   !  FB15   JCC,7,(1986),230
+X   CW  NA  X    195.145974     2   1.498   !  FB15   JCC,7,(1986),230
+X   OH  P   X    0.00000000     3   0.250   !  FB15   JCC,7,(1986),230
+X   OS  P   X    0.00000000     3   0.250   !  FB15   JCC,7,(1986),230
+N   CT  C   N    0.00000000     4     0.0   !  Simerling (2006)
+N   CT  C   N    138.005474     3   0.222   !  FB15   Simerling (2006)
+N   CT  C   N    179.174797     2   1.719   !  FB15   Simerling (2006)
+N   CT  C   N    200.897516     1   0.380   !  FB15   Simerling (2006)
+C   N   CT  C    0.00000000     4   -0.07   !  FB15   Simerling (2006)
+C   N   CT  C    11.8171393     3   -0.12   !  FB15   Simerling (2006)
+C   N   CT  C    35.5888620     2   0.287   !  FB15   Simerling (2006)
+C   N   CT  C    -0.5865116     1   0.134   !  FB15   Simerling (2006)
+CT  CT  N   C    0.00000000     4   -0.09   !  FB15   Simerling (2006)
+CT  CT  N   C    -13.118101     3   0.024   !  FB15   Simerling (2006)
+CT  CT  N   C    -70.048810     2   0.656   !  FB15   Simerling (2006)
+CT  CT  N   C    -12.985072     1   -0.44   !  FB15   Simerling (2006)
+CT  CT  C   N    0.00000000     4   -0.11   !  FB15   Simerling (2006)
+CT  CT  C   N    0.81093466     3   0.106   !  FB15   Simerling (2006)
+CT  CT  C   N    -10.517539     2   -0.70   !  FB15   Simerling (2006)
+CT  CT  C   N    12.3504249     1   0.193   !  FB15   Simerling (2006)
+H   N   C   O    189.985257     2   1.545   !  FB15   JCC,7,(1986),230
+H   N   C   O    -12.134891     1   1.543   !  FB15   J.C.cistrans-NMA DE
+CT  S   S   CT   0.00000000     2   3.500   !  FB15   JCC,7,(1986),230
+CT  S   S   CT   0.00000000     3   0.600   !  FB15   JCC,7,(1986),230
+OH  P   OS  CT   0.00000000     3   0.250   !  FB15   JCC,7,(1986),230
+OH  P   OS  CT   0.00000000     2   1.200   !  FB15   gg&gt ene.631g*/mp2
+OS  P   OS  CT   0.00000000     3   0.250   !  FB15   JCC,7,(1986),230
+OS  P   OS  CT   0.00000000     2   1.200   !  FB15   gg&gt ene.631g*/mp2
+H1  CT  C   O    38.2726175     1   0.346   !  FB15   Junmei et al, 1999
+H1  CT  C   O    180.838565     3   -0.01   !  FB15   Junmei et al, 1999
+HC  CT  C   O    -3.5690795     1   0.889   !  FB15   Junmei et al, 1999
+HC  CT  C   O    160.567719     3   -0.02   !  FB15   Junmei et al, 1999
+HC  CT  CT  HC   -18.519301     3   0.162   !  FB15   Junmei et al, 1999
+HC  CT  CT  CT   5.26209481     3   0.147   !  FB15   Junmei et al, 1999
+HC  CT  CM  CM   180.000000     3   0.380   !  FB15   Junmei et al, 1999
+HC  CT  CM  CM   0.00000000     1   1.150   !  FB15   Junmei et al, 1999
+HO  OH  CT  CT   0.00000000     3   0.160   !  FB15   Junmei et al, 1999
+HO  OH  CT  CT   0.00000000     1   0.250   !  FB15   Junmei et al, 1999
+HO  OH  C   O    163.410678     2   2.286   !  FB15   Junmei et al, 1999
+HO  OH  C   O    1.24911502     1   1.847   !  FB15   Junmei et al, 1999
+CM  CM  C   O    180.000000     2   2.175   !  FB15   Junmei et al, 1999
+CM  CM  C   O    0.00000000     3   0.300   !  FB15   Junmei et al, 1999
+CT  CM  CM  CT   180.000000     2   6.650   !  FB15   Junmei et al, 1999
+CT  CM  CM  CT   180.000000     1   1.900   !  FB15   Junmei et al, 1999
+CT  CT  CT  CT   -2.4391208     3   0.495   !  FB15   Junmei et al, 1999
+CT  CT  CT  CT   183.435486     2   0.142   !  FB15   Junmei et al, 1999
+CT  CT  CT  CT   168.309046     1   0.199   !  FB15   Junmei et al, 1999
+CT  CT  NT  CT   0.00000000     3   0.300   !  FB15   Junmei et al, 1999
+CT  CT  NT  CT   180.000000     2   0.480   !  FB15   Junmei et al, 1999
+CT  CT  OS  CT   0.00000000     3   0.383   !  FB15  
+CT  CT  OS  CT   180.000000     2   0.100   !  FB15  
+CT  CT  OS  C    0.00000000     3   0.383   !  FB15   Junmei et al, 1999
+CT  CT  OS  C    180.000000     1   0.800   !  FB15   Junmei et al, 1999
+CT  OS  CT  OS   0.00000000     3   0.100   !  FB15   Junmei et al, 1999
+CT  OS  CT  OS   180.000000     2   0.850   !  FB15   Junmei et al, 1999
+CT  OS  CT  OS   180.000000     1   1.350   !  FB15   Junmei et al, 1999
+CT  OS  CT  NS   0.00000000     3   0.383   !  FB15   parm98.dat, TC,PC,PAK
+CT  OS  CT  NS   0.00000000     2   0.650   !  FB15   Piotr et al.
+CT  CZ  CZ  HZ   0.00000000     1   0.000   !  Junmei et al, 1999
+O   C   OS  CT   180.000000     2   2.700   !  FB15   Junmei et al, 1999
+O   C   OS  CT   180.000000     1   1.400   !  FB15   Junmei et al, 1999
+OS  CT  NS  CK   0.00000000     2   0.000   !  parm98, TC,PC,PAK
+OS  CT  NS  CK   0.00000000     1   2.500   !  FB15   parm98, TC,PC,PAK
+OS  CT  NS  CM   0.00000000     2   0.000   !  parm98, TC,PC,PAK
+OS  CT  NS  CM   0.00000000     1   2.500   !  FB15   parm98, TC,PC,PAK
+OS  CT  CT  OS   0.00000000     3   0.144   !  FB15   parm98, TC,PC,PAK
+OS  CT  CT  OS   0.00000000     2   1.175   !  FB15   Piotr et al.
+OS  CT  CT  OH   0.00000000     3   0.144   !  FB15   parm98, TC,PC,PAK
+OS  CT  CT  OH   0.00000000     2   1.175   !  FB15   parm98, TC,PC,PAK
+OH  CT  CT  OH   0.00000000     3   0.144   !  FB15   parm98, TC,PC,PAK
+OH  CT  CT  OH   0.00000000     2   1.175   !  FB15   parm98, TC,PC,PAK
+F   CT  CT  F    180.000000     1   1.200   !  FB15   Junmei et al, 1999
+Cl  CT  CT  Cl   180.000000     1   0.450   !  FB15   Junmei et al, 1999
+Br  CT  CT  Br   180.000000     1   0.000   !  FB15   Junmei et al, 1999
+H1  CT  CT  OS   0.00000000     1   0.250   !  FB15   Junmei et al, 1999
+H1  CT  CT  OH   36.5506794     1   0.728   !  FB15   Junmei et al, 1999
+H1  CT  CT  F    0.00000000     1   0.190   !  FB15   Junmei et al, 1999
+H1  CT  CT  Cl   0.00000000     1   0.250   !  FB15   Junmei et al, 1999
+H1  CT  CT  Br   0.00000000     1   0.550   !  FB15   Junmei et al, 1999
+HC  CT  CT  OS   0.00000000     1   0.250   !  FB15   Junmei et al, 1999
+HC  CT  CT  OH   0.12028675     1   0.229   !  FB15   Junmei et al, 1999
+HC  CT  CT  F    0.00000000     1   0.190   !  FB15   Junmei et al, 1999
+HC  CT  CT  Cl   0.00000000     1   0.250   !  FB15   Junmei et al, 1999
+HC  CT  CT  Br   0.00000000     1   0.550   !  FB15   Junmei et al, 1999
+H1  CT  NT  LP   0.00000000     3   0.000   ! 
+CT  CT  NT  LP   0.00000000     3   0.000   ! 
+CT  C   N   LP   180.000000     2   0.000   !  FB15  
+O   C   N   LP   180.000000     2   0.000   !  FB15  
+H1  CT  OH  LP   0.00000000     3     0.0   ! 
+CT  CT  OH  LP   0.00000000     3     0.0   ! 
+H1  CT  OS  LP   0.00000000     3     0.0   ! 
+H2  CT  OS  LP   0.00000000     3     0.0   ! 
+CT  CT  OS  LP   0.00000000     3     0.0   ! 
+CM  CM  OS  LP   180.000000     2   0.000   !  FB15  
+HA  CM  OS  LP   180.000000     2   0.000   !  FB15  
+H4  CM  OS  LP   180.000000     2   0.000   !  FB15  
+5k  CT  CT  CT   168.309046     1   0.199   !  FB15 
+CT  6I  CT  N    -6.5725200     3   -0.11   !  FB15 
+X   5d  CT  X    3.79678962     3   0.179   !  FB15 
+X   6M  CT  X    3.79678962     3   0.179   !  FB15 
+6J  CT  N   C    -12.985072     1   -0.44   !  FB15 
+5h  CT  C   N    12.3504249     1   0.193   !  FB15 
+CC  6H  CT  N    -2.1909527     3   0.157   !  FB15 
+CT  5h  CC  NB   1.91897417     3   0.221   !  FB15 
+CT  5d  C   OH   -16.713222     3   0.242   !  FB15 
+5t  6T  OH  HO   1.35279563     1   0.000   !  FB15 
+6M  CT  C   N    12.3504249     1   0.193   !  FB15 
+6C  CT  C   N    12.3504249     1   0.193   !  FB15 
+N   CT  6T  OH   3.71254379     3   0.124   !  FB15 
+X   6S  OH  X    -1.2860925     3   0.392   !  FB15 
+CC  6H  CT  N3   -2.1909527     3   0.157   !  FB15 
+6L  CT  N   C    -12.985072     1   -0.44   !  FB15 
+HC  6E  5e  HC   -18.519301     3   0.162   !  FB15 
+C   CT  6R  CT   12.7499196     3   0.082   !  FB15 
+N3  CT  6S  OH   6.21518154     3   0.221   !  FB15 
+CT  CT  6K  HC   5.26209481     3   0.147   !  FB15 
+6Q  5q  C   N    12.3504249     1   0.193   !  FB15 
+5q  6Q  CT  C    -4.8531748     3   -0.35   !  FB15 
+X   6N  C   X    0.00000000     2   0.000   !  FB15 
+X   6T  CT  X    3.79678962     3   0.179   !  FB15 
+N   CT  6C  SH   -2.6325371     3   0.068   !  FB15 
+H1  CT  6T  OH   36.5506794     1   0.728   !  FB15 
+X   6K  CT  X    3.79678962     3   0.179   !  FB15 
+5c  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  6I  5i  HC   5.26209481     3   0.147   !  FB15 
+CC  5P  CT  N3   1.68374663     3   0.126   !  FB15 
+C   CT  6T  OH   4.62029615     3   0.129   !  FB15 
+N3  CT  6C  SH   -2.6325371     3   0.068   !  FB15 
+X   6Q  5q  X    3.79678962     3   0.179   !  FB15 
+5j  6J  CT  C    -3.3049491     3   -0.05   !  FB15 
+CA  6F  CT  N    -3.5590590     3   0.081   !  FB15 
+6K  CT  CT  CT   168.309046     1   0.199   !  FB15 
+CT  6I  CT  HC   5.26209481     3   0.147   !  FB15 
+CT  6Q  5q  HC   5.26209481     3   0.147   !  FB15 
+CT  6P  CT  CT   168.309046     1   0.199   !  FB15 
+HC  6V  CT  HC   -18.519301     3   0.162   !  FB15 
+X   5P  CT  X    3.79678962     3   0.179   !  FB15 
+C   5e  6E  CT   -0.6423478     3   -0.72   !  FB15 
+6E  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   6C  CT  X    3.79678962     3   0.179   !  FB15 
+6T  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  CT  6R  HC   5.26209481     3   0.147   !  FB15 
+CT  6S  OH  HO   -2.5975863     1   -0.03   !  FB15 
+HC  6N  C   O    160.567719     3   -0.02   !  FB15 
+6F  CT  N   C    -12.985072     1   -0.44   !  FB15 
+5i  6I  CT  CT   -0.8377523     1   -0.07   !  FB15 
+CT  6L  CT  CT   0.00000000     1   0.109   !  FB15 
+CA  6Y  CT  N    -0.3974532     3   0.176   !  FB15 
+C   CT  6I  CT   -3.0178618     3   -0.04   !  FB15 
+5d  CT  C   N    12.3504249     1   0.193   !  FB15 
+CA  CA  6Y  CT   -1.5045271     3   0.248   !  FB15 
+CT  6R  CT  N    19.5331742     3   -0.26   !  FB15 
+HC  5q  C   O    160.567719     3   -0.02   !  FB15 
+C   CT  6S  OH   0.47694206     3   0.011   !  FB15 
+CB  CS  6W  CT   11.4505024     3   0.321   !  FB15 
+5q  6Q  CT  N3   0.23723556     3   -0.07   !  FB15 
+X   6D  CT  X    3.79678962     3   0.179   !  FB15 
+CT  6I  CT  CT   0.46662813     1   0.134   !  FB15 
+N3  CT  6T  OH   3.71254379     3   0.124   !  FB15 
+CT  CT  5k  HC   5.26209481     3   0.147   !  FB15 
+CT  5k  CT  N    -1.8460157     3   0.114   !  FB15 
+6I  CT  C   N    12.3504249     1   0.193   !  FB15 
+CS  6W  CT  N    0.19784028     3   0.017   !  FB15 
+CT  6W  CS  CW   -3.1230591     3   0.107   !  FB15 
+6I  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   6I  CT  X    3.79678962     3   0.179   !  FB15 
+CT  6M  CT  S    -15.154685     3   0.116   !  FB15 
+5t  6T  CT  C    6.03733611     3   0.200   !  FB15 
+CT  6K  CT  N3   -0.4370900     3   0.027   !  FB15 
+CT  6D  C   O2   0.85943801     3   0.035   !  FB15 
+5e  6E  CT  C    3.86939481     3   0.161   !  FB15 
+C   CT  6Y  CA   0.94720950     3   -0.05   !  FB15 
+CT  CT  6L  HC   5.26209481     3   0.147   !  FB15 
+6P  CT  C   N    12.3504249     1   0.193   !  FB15 
+CS  6W  CT  N3   0.19784028     3   0.017   !  FB15 
+CT  6V  CT  HC   5.26209481     3   0.147   !  FB15 
+C   CT  5h  CC   0.06518000     3   -0.07   !  FB15 
+CT  6K  CT  HC   5.26209481     3   0.147   !  FB15 
+6W  CT  N   C    -12.985072     1   -0.44   !  FB15 
+CT  6K  CT  N    -0.4370900     3   0.027   !  FB15 
+X   6Q  CT  X    3.79678962     3   0.179   !  FB15 
+5k  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   6H  CC  X    0.00000000     2   0.000   !  FB15 
+C   CT  6W  CS   0.19741679     3   -0.06   !  FB15 
+CT  6T  5t  HC   5.26209481     3   0.147   !  FB15 
+5c  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   6H  CT  X    3.79678962     3   0.179   !  FB15 
+6E  CT  C   N    12.3504249     1   0.193   !  FB15 
+HC  6K  CT  HC   -18.519301     3   0.162   !  FB15 
+X   6Y  CA  X    0.00000000     2   0.000   !  FB15 
+HC  5t  6T  OH   0.12028675     1   0.229   !  FB15 
+HC  6P  CT  HC   -18.519301     3   0.162   !  FB15 
+6N  CT  N   C    -12.985072     1   -0.44   !  FB15 
+HC  6J  5j  HC   -18.519301     3   0.162   !  FB15 
+X   5h  CT  X    3.79678962     3   0.179   !  FB15 
+HC  6Q  5q  HC   -18.519301     3   0.162   !  FB15 
+CT  5d  C   O    18.0187769     3   0.312   !  FB15 
+C   5d  CT  N    -5.9970823     3   -0.12   !  FB15 
+X   5h  CC  X    0.00000000     2   0.000   !  FB15 
+X   6V  CT  X    3.79678962     3   0.179   !  FB15 
+CT  6C  SH  HS   0.63615212     3   0.106   !  FB15 
+CA  CA  6F  CT   -9.8806942     3   0.371   !  FB15 
+CT  5P  CC  NA   33.5287618     3   0.465   !  FB15 
+5q  6Q  CT  N    0.23723556     3   -0.07   !  FB15 
+6Q  CT  C   N    12.3504249     1   0.193   !  FB15 
+HC  6R  CT  HC   -18.519301     3   0.162   !  FB15 
+CT  5P  CC  CW   21.9139619     3   -0.42   !  FB15 
+CT  6R  CT  CT   13.4804435     1   0.187   !  FB15 
+X   5k  CT  X    3.79678962     3   0.179   !  FB15 
+6L  CT  C   N    12.3504249     1   0.193   !  FB15 
+X   6J  5j  X    3.79678962     3   0.179   !  FB15 
+6L  CT  CT  HC   5.26209481     3   0.147   !  FB15 
+6T  CT  N   C    -12.985072     1   -0.44   !  FB15 
+6I  CT  CT  HC   5.26209481     3   0.147   !  FB15 
+CT  6P  CT  N3   -18.656946     3   0.291   !  FB15 
+CT  6V  CT  N3   6.86380073     3   0.138   !  FB15 
+CT  6L  CT  N    -0.2959378     3   -0.04   !  FB15 
+5t  6T  CT  N3   3.78788835     3   0.202   !  FB15 
+CT  5h  CC  CW   0.26070081     3   -0.23   !  FB15 
+CT  5k  CT  HC   5.26209481     3   0.147   !  FB15 
+6K  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   6W  CT  X    3.79678962     3   0.179   !  FB15 
+5i  6I  CT  N3   6.43745988     3   0.141   !  FB15 
+HC  5d  C   O    160.567719     3   -0.02   !  FB15 
+C   CT  6K  CT   -4.1885592     3   -0.12   !  FB15 
+6R  CT  N   C    -12.985072     1   -0.44   !  FB15 
+CT  5k  CT  CT   -1.1263514     1   -0.17   !  FB15 
+X   6L  CT  X    3.79678962     3   0.179   !  FB15 
+6J  CT  C   N    12.3504249     1   0.193   !  FB15 
+X   6W  CS  X    0.00000000     2   0.000   !  FB15 
+HC  6I  5i  HC   -18.519301     3   0.162   !  FB15 
+C   CT  6M  CT   -4.3853618     3   -0.11   !  FB15 
+5i  6I  CT  HC   5.26209481     3   0.147   !  FB15 
+CC  5h  CT  N    1.13821181     3   0.002   !  FB15 
+X   6F  CT  X    3.79678962     3   0.179   !  FB15 
+C   CT  6C  SH   -0.2989626     3   -0.03   !  FB15 
+X   6T  5t  X    3.79678962     3   0.179   !  FB15 
+C   CT  6L  CT   -0.3705380     3   -0.08   !  FB15 
+C   6D  CT  C    2.54049762     3   0.061   !  FB15 
+HC  5j  C   O    160.567719     3   -0.02   !  FB15 
+HC  5k  CT  HC   -18.519301     3   0.162   !  FB15 
+5P  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  6K  CT  CT   2.15684458     1   -0.14   !  FB15 
+CC  5h  CT  N3   1.13821181     3   0.002   !  FB15 
+CT  6L  CT  HC   5.26209481     3   0.147   !  FB15 
+X   6P  CT  X    3.79678962     3   0.179   !  FB15 
+6K  CT  CT  HC   5.26209481     3   0.147   !  FB15 
+X   5c  CT  X    3.79678962     3   0.179   !  FB15 
+X   6Y  CT  X    3.79678962     3   0.179   !  FB15 
+X   5P  CC  X    0.00000000     2   0.000   !  FB15 
+X   6J  CT  X    3.79678962     3   0.179   !  FB15 
+X   6I  5i  X    3.79678962     3   0.179   !  FB15 
+CT  6H  CC  CV   2.11452102     3   -0.04   !  FB15 
+X   6S  CT  X    3.79678962     3   0.179   !  FB15 
+6M  CT  N   C    -12.985072     1   -0.44   !  FB15 
+HC  6I  CT  HC   -18.519301     3   0.162   !  FB15 
+6W  CT  C   N    12.3504249     1   0.193   !  FB15 
+X   5e  C   X    0.00000000     2   0.000   !  FB15 
+C   6D  CT  N3   5.75685670     3   0.227   !  FB15 
+CT  6N  C   O    1.00256481     3   0.394   !  FB15 
+6H  CT  N   C    -12.985072     1   -0.44   !  FB15 
+6Y  CT  C   N    12.3504249     1   0.193   !  FB15 
+6Y  CT  N   C    -12.985072     1   -0.44   !  FB15 
+5k  CT  CT  HC   5.26209481     3   0.147   !  FB15 
+CC  5P  CT  N    1.68374663     3   0.126   !  FB15 
+C   6N  CT  C    5.47054616     3   -0.19   !  FB15 
+CT  6H  CC  NA   13.3329821     3   0.413   !  FB15 
+6S  CT  N   C    -12.985072     1   -0.44   !  FB15 
+5e  6E  CT  N    -9.5334812     3   -0.22   !  FB15 
+5P  CT  N   C    -12.985072     1   -0.44   !  FB15 
+C   6D  CT  N    5.75685670     3   0.227   !  FB15 
+6S  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  6V  CT  N    6.86380073     3   0.138   !  FB15 
+C   CT  6F  CA   0.64637577     3   -0.05   !  FB15 
+CT  6J  5j  HC   5.26209481     3   0.147   !  FB15 
+6Q  CT  N   C    -12.985072     1   -0.44   !  FB15 
+5k  CT  C   N    12.3504249     1   0.193   !  FB15 
+5h  CT  N   C    -12.985072     1   -0.44   !  FB15 
+C   5j  6J  CT   20.2247124     3   -0.22   !  FB15 
+N   CT  5c  SH   -5.1150781     3   0.072   !  FB15 
+X   6C  SH  X    0.94733300     3   0.376   !  FB15 
+5j  6J  CT  N    -14.889492     3   -0.25   !  FB15 
+CT  6N  C   N    5.13104888     1   0.066   !  FB15 
+CA  6F  CT  N3   -3.5590590     3   0.081   !  FB15 
+C   CT  6H  CC   1.27386272     3   -0.09   !  FB15 
+C   CT  5P  CC   -0.3668238     3   0.269   !  FB15 
+C   CT  5c  SH   -1.0257123     3   0.018   !  FB15 
+CT  6I  CT  N3   -6.5725200     3   -0.11   !  FB15 
+CT  CT  6I  HC   5.26209481     3   0.147   !  FB15 
+C   5d  CT  C    2.99074593     3   0.052   !  FB15 
+6D  CT  C   N    12.3504249     1   0.193   !  FB15 
+C   6N  CT  N3   0.26107657     3   -0.02   !  FB15 
+6C  CT  N   C    -12.985072     1   -0.44   !  FB15 
+C   CT  5k  CT   -2.5038444     3   0.008   !  FB15 
+C   CT  6P  CT   -6.6242245     3   0.139   !  FB15 
+X   5q  C   X    0.00000000     2   0.000   !  FB15 
+N   CT  6S  OH   6.21518154     3   0.221   !  FB15 
+C   6N  CT  N    0.26107657     3   -0.02   !  FB15 
+5i  6I  CT  C    6.28339256     3   0.158   !  FB15 
+CT  6T  OH  HO   -3.9555828     1   -0.24   !  FB15 
+X   6D  C   X    0.00000000     2   0.000   !  FB15 
+6D  CT  N   C    -12.985072     1   -0.44   !  FB15 
+CT  6M  CT  N    0.67674644     3   0.008   !  FB15 
+CA  6Y  CT  N3   -0.3974532     3   0.176   !  FB15 
+6R  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  6R  CT  N3   19.5331742     3   -0.26   !  FB15 
+X   6F  CA  X    0.00000000     2   0.000   !  FB15 
+6V  CT  N   C    -12.985072     1   -0.44   !  FB15 
+X   5j  C   X    0.00000000     2   0.000   !  FB15 
+C   CT  6V  CT   4.25630122     3   0.088   !  FB15 
+X   6T  OH  X    -1.2860925     3   0.392   !  FB15 
+CT  6M  CT  N3   0.67674644     3   0.008   !  FB15 
+X   6N  CT  X    3.79678962     3   0.179   !  FB15 
+CT  6R  CT  HC   5.26209481     3   0.147   !  FB15 
+5d  CT  N   C    -12.985072     1   -0.44   !  FB15 
+CT  6P  CT  N    -18.656946     3   0.291   !  FB15 
+6F  CT  C   N    12.3504249     1   0.193   !  FB15 
+CT  CT  6P  HC   5.26209481     3   0.147   !  FB15 
+6N  CT  C   N    12.3504249     1   0.193   !  FB15 
+X   6E  5e  X    3.79678962     3   0.179   !  FB15 
+CT  6L  CT  N3   -0.2959378     3   -0.04   !  FB15 
+5t  6T  CT  N    3.78788835     3   0.202   !  FB15 
+6P  CT  N   C    -12.985072     1   -0.44   !  FB15 
+CT  6E  5e  HC   5.26209481     3   0.147   !  FB15 
+H1  CT  6S  OH   36.5506794     1   0.728   !  FB15 
+6K  CT  C   N    12.3504249     1   0.193   !  FB15 
+C   5q  6Q  CT   -7.0909041     3   0.297   !  FB15 
+6V  CT  C   N    12.3504249     1   0.193   !  FB15 
+5i  6I  CT  N    6.43745988     3   0.141   !  FB15 
+X   6E  CT  X    3.79678962     3   0.179   !  FB15 
+X   6R  CT  X    3.79678962     3   0.179   !  FB15 
+6H  CT  C   N    12.3504249     1   0.193   !  FB15 
+5e  6E  CT  N3   -9.5334812     3   -0.22   !  FB15 
+CT  6P  CT  HC   5.26209481     3   0.147   !  FB15 
+X   5d  C   X    0.00000000     2   0.000   !  FB15 
+HC  6L  CT  HC   -18.519301     3   0.162   !  FB15 
+
+IMPROPER
+X   X   C   O   10.5   2   180.0  !  JCC,7,(1986),230
+X   O2  C   O2  10.5   2   180.0  !  JCC,7,(1986),230
+X   X   N   H   1.0    2   180.0  !  JCC,7,(1986),230
+X   X   N2  H   1.0    2   180.0  !  JCC,7,(1986),230
+X   X   NA  H   1.0    2   180.0  !  JCC,7,(1986),230
+X   N2  CA  N2  10.5   2   180.0  !  JCC,7,(1986),230
+X   CT  N   CT  1.0    2   180.0  !  JCC,7,(1986),230
+X   X   CA  HA  1.1    2   180.0  !  bsd.on C6H6 nmodes
+X   X   CW  H4  1.1    2   180.0 
+X   X   CR  H5  1.1    2   180.0 
+X   X   CV  H4  1.1    2   180.0 
+X   X   CQ  H5  1.1    2   180.0 
+X   X   CK  H5  1.1    2   180.0 
+X   X   CM  H4  1.1    2   180.0 
+X   X   CM  HA  1.1    2   180.0 
+X   X   CA  H4  1.1    2   180.0  !  bsd.on C6H6 nmodes
+X   X   CA  H5  1.1    2   180.0  !  bsd.on C6H6 nmodes
+CK  CB  NS  CT  1      2   180.0  
+CM  C   NS  CT  1      2   180.0  !  dac guess, 9/94
+CM  C   CM  CT  180    2   1.100  !  FB15 
+CT  O   C   OH  10.5   2   180.0  
+NA  CV  CC  CT  1.1    2   180.0  !
+NB  CW  CC  CT  1.1    2   180.0  !
+NA  CW  CC  CT  1.1    2   180.0  !
+CW  CB  CS  CT  1.1    2   180.0  !
+CA  CA  CA  CT  180    2   1.079  !  FB15 
+C   CM  CM  CT  1.1    2   180.0  !  dac guess, 9/94
+NC  CM  CA  N2  1.1    2   180.0  !  dac guess, 9/94
+CB  NC  CA  N2  1.1    2   180.0  !  dac, 10/94
+NA  NC  CA  N2  1.1    2   180.0  !  dac, 10/94
+CA  CA  C   OH  1.1    2   180.0  !  (not used in tyr!)
+CA  CA  CA  OH  180    2   1.100  !  FB15   in tyr
+H5  O   C   OH  1.1    2   180.0  !  Junmei et al.1999
+H5  O   C   OS  1.1    2   180.0  !
+CM  CT  CM  HA  1.1    2   180.0  !  Junmei et al.1999
+CA  CA  CA  Br  1.1    2   180.0  !  Junmei et al.1999
+CM  H4  C   O   1.1    2   180.0  !  Junmei et al.1999
+C   CT  N   H   1.1    2   180.0  !  Junmei et al.1999
+C   CT  N   O   1.1    2   180.0  !  Junmei et al.1999
+CW  CB  CS  6W  1.1    2   180.0  !  KM HACK
+CC  6H  CV  NA  180    2   1.100  !  FB15 
+CC  5P  CW  NA  180    2   1.100  !  FB15 
+CC  5h  CW  NB  180    2   1.100  !  FB15 
+C   5j  O   OH  180    2   10.50  !  FB15 
+C   5d  O   OH  180    2   10.50  !  FB15 
+CS  CB  6W  CW  180    2   1.100  !  FB15 
+6F  CA  CA  CA  180    2   1.079  !  FB15 
+6Y  CA  CA  CA  180    2   1.079  !  FB15 
+
+!
+!  Note: the HO and HW parameters, although zero in Cornell et al.
+!  should not have a 0.0 vdw radius in CHARMM to avoid difficulties
+!  with the 0.0/0.0 in the FAST OFF van der Waal code...
+!
+!  NOTE: the defaults chosen here are to match AMBER.  It is not
+!  recommended that users actually run with GROUP based truncation
+!  and a switch.  Better would be ATOM based FSHIFT VSHIFT
+NONBONDED  NBXMOD 5  GROUP SWITCH CDIEL -
+     CUTNB 14.0  CTOFNB 12.0  CTONNB 10.0  EPS 1.0  E14FAC 0.83333333  WMIN 1.4
+!          Emin       Rmin/2         Emin/2      Rmin  (for 1-4's)
+!       (kcal/mol)     (A)
+H  0.0  -0.015700  0.600000  0.0  -0.0078500  0.600000  ! Ferguson base pair geom.
+HO 0.0  -0.000000  0.000000  0.0  -0.0000000  0.000000  ! OPLS Jorgensen, JACS,110,(1988),1657
+HS 0.0  -0.015700  0.600000  0.0  -0.0078500  0.600000  ! W. Cornell CH3SH --> CH3OH FEP
+HC 0.0  -0.015700  1.487000  0.0  -0.0078500  1.487000  ! OPLS
+H1 0.0  -0.015700  1.387000  0.0  -0.0078500  1.387000  ! Veenstra et al JCC,8,(1992),963
+H2 0.0  -0.015700  1.287000  0.0  -0.0078500  1.287000  ! Veenstra et al JCC,8,(1992),963
+H3 0.0  -0.015700  1.187000  0.0  -0.0078500  1.187000  ! Veenstra et al JCC,8,(1992),963
+HP 0.0  -0.015700  1.100000  0.0  -0.0078500  1.100000  ! Veenstra et al JCC,8,(1992),963
+HA 0.0  -0.015000  1.459000  0.0  -0.0075000  1.459000  ! Spellmeyer
+H4 0.0  -0.015000  1.409000  0.0  -0.0075000  1.409000  ! Spellmeyer, one electrowithdr. neighbor
+H5 0.0  -0.015000  1.359000  0.0  -0.0075000  1.359000  ! Spellmeyer, two electrowithdr. neighbor
+HW 0.0  -0.000000  0.000000  0.0  -0.0000000  0.000000  ! TIP3P water model
+HZ 0.0  -0.015000  1.459000  0.0  -0.0075000  1.459000  ! H bonded to sp C (Howard et al JCC 16)
+O  0.0  -0.210000  1.661200  0.0  -0.1050000  1.661200  ! OPLS
+O2 0.0  -0.210000  1.661200  0.0  -0.1050000  1.661200  ! OPLS
+OW 0.0  -0.152000  1.768300  0.0  -0.0760000  1.768300  ! TIP3P water model
+OH 0.0  -0.210400  1.721000  0.0  -0.1052000  1.721000  ! OPLS
+OS 0.0  -0.170000  1.683700  0.0  -0.0850000  1.683700  ! OPLS ether
+CS 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! Spellmeyer
+CT 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  ! Spellmeyer
+C  0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CA 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CM 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CB 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CC 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CN 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CK 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CQ 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CW 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CV 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CR 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CY 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CD 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+CZ 0.0  -0.086000  1.908000  0.0  -0.0430000  1.908000  ! OPLS
+! N* 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+N  0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NA 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NB 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NC 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+N2 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+N3 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NT 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NS 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS
+NY 0.0  -0.170000  1.824000  0.0  -0.0850000  1.824000  ! OPLS N in nitrile
+S  0.0  -0.250000  2.000000  0.0  -0.1250000  2.000000  ! W. Cornell CH3SH and CH3SCH3 FEP's
+SH 0.0  -0.250000  2.000000  0.0  -0.1250000  2.000000  ! W. Cornell CH3SH and CH3SCH3 FEP's
+P  0.0  -0.200000  2.100000  0.0  -0.1000000  2.100000  ! JCC,7,(1986),230;
+IM 0.0  -0.100000  2.470000  0.0  -0.0500000  2.470000  ! Cl- Smith & Dang, JCP 1994,100:5,3757
+Li 0.0  -0.018300  1.137000  0.0  -0.0091500  1.137000  ! Li+ Aqvist JPC 1990,94,8021. (adapted)
+IP 0.0  -0.002770  1.868000  0.0  -0.0013850  1.868000  ! Na+ Aqvist JPC 1990,94,8021. (adapted)
+K  0.0  -0.000328  2.658000  0.0  -0.0001640  2.658000  ! K+  Aqvist JPC 1990,94,8021. (adapted)
+Rb 0.0  -0.000170  2.956000  0.0  -0.0000850  2.956000  ! Rb+ Aqvist JPC 1990,94,8021. (adapted)
+Es 0.0  -0.000081  3.395000  0.0  -0.0000403  3.395000  ! Cs+ Aqvist JPC 1990,94,8021. (adapted)
+C0 0.0  -0.459789  1.713100  0.0  -0.2298945  1.713100  ! Ca2+ Aqvist JPC 1990,94,8021.(adapted)
+MG 0.0  -0.894700  0.792600  0.0  -0.4473500  0.792600  ! Mg2+ Aqvist JPC 1990,94,8021.(adapted)
+Zn 0.0  -0.012500  1.100000  0.0  -0.0062500  1.100000  ! Zn2+, Merz,PAK, JACS,113,8262,(1991)
+F  0.0  -0.061000  1.750000  0.0  -0.0305000  1.750000  ! Gough et al. JCC 13,(1992),963.
+Cl 0.0  -0.265000  1.948000  0.0  -0.1325000  1.948000  ! Fox, JPCB,102,8070,(98),flex.mdl CHCl3
+Br 0.0  -0.320000  2.220000  0.0  -0.1600000  2.220000  ! Junmei(?)
+I  0.0  -0.400000  2.350000  0.0  -0.2000000  2.350000  ! JCC,7,(1986),230;
+IB 0.0  -0.100000  5.000000  0.0  -0.0500000  5.000000  ! solvated ion for vacuum approximation
+LP 0.0  -0.000000  0.000000  0.0  -0.0000000  0.000000  ! lone pair
+! ions
+! Li       0.0      -0.00233       1.2975  ! Lithium
+!                   ! From S Noskov, target ddG(Li-Na) was 23-26.0 kcal/mol (see JPC B, Lamoureux&Roux,2006)
+! IP       0.0       -0.0469    1.41075  ! new CHARMM Sodium
+!                   ! ddG of -18.6 kcal/mol with K+ from S. Noskov
+! MG       0.0       -0.0150    1.18500   ! Magnesium
+!                   ! B. Roux dA = -441.65
+! K        0.0       -0.0870    1.76375   ! Potassium
+!                    ! D. Beglovd and B. Roux, dA=-82.35P2.8 = -79.56 kca/mol
+! C0       0.0       -0.120      1.367    ! Calcium
+!                    ! S. Marchand and B. Roux, dA = -384.8 kcal/mol
+! Rb       0.0000    -0.15      1.90      ! Rubidium
+!                    ! delta A with respect to POT is +6.0 kcal/mol in bulk water
+! Es       0.0       -0.1900    2.100     ! Cesium
+!                    ! delta A with respect to POT is +12.0 kcal/mol
+BAR      0.0       -0.150     1.890     ! Barium
+5h 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6C 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5j 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6E 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6P 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5P 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6R 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6T 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6V 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6H 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5d 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6J 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5q 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6L 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6N 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6Y 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5i 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6D 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5k 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6F 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6Q 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6S 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6W 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5c 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6I 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5e 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6K 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+6M 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+5t 0.0  -0.109400  1.908000  0.0  -0.0547000  1.908000  !  FB15 
+                   ! B. Roux, dA = dA[calcium] + 64.2 kcal/mol
+! ZN       0.000000  -0.250000     1.090000 ! Zinc
+!                    ! RHS March 18, 1990
+CAD      0.000000  -0.120000     1.357000 ! Cadmium
+                   ! S. Marchand and B. Roux, from delta delta G
+! IM       0.0       -0.150      2.27     ! Chloride
+!                    ! D. Beglovd and B. Roux, dA=-83.87+4.46 = -79.40 kcal/mol
+!for hydroxide
+OX       0.000000  -0.120000     1.700000 ! ALLOW   POL ION
+                   ! JG 8/27/89
+HX       0.000000  -0.046000     0.224500 ! ALLOW PEP POL SUL ARO ALC
+                   ! same as TIP3P hydrogen, adm jr., 7/20/89
+
+
+END

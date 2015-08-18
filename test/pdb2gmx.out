@@ -1,0 +1,42 @@
+
+Using the Amberfb15 force field in directory amberfb15.ff
+
+
+Select the Water Model:
+Reading protein-gmx.pdb...
+Read 929 atoms
+Analyzing pdb file
+Splitting chemical chains based on TER records or chain id changing.
+There are 2 chains and 0 blocks of water and 2 residues with 929 atoms
+
+  chain  #res #atoms
+  1 'A'    61    927  
+  2 'B'     2      2  
+
+Reading residue database... (amberfb15)
+Processing chain 1 'A' (927 atoms, 61 residues)
+Identified residue MET1 as a starting terminus.
+Identified residue GLU61 as a ending terminus.
+Checking for duplicate atoms....
+Generating any missing hydrogen atoms and/or adding termini.
+Now there are 61 residues with 927 atoms
+Chain time...
+Processing chain 2 'B' (2 atoms, 2 residues)
+Warning: Starting residue NA1 in chain not identified as Protein/RNA/DNA.
+Warning: Starting residue NA2 in chain not identified as Protein/RNA/DNA.
+Problem with chain definition, or missing terminal residues.
+This chain does not appear to contain a recognized chain molecule.
+If this is incorrect, you can edit residuetypes.dat to modify the behavior.
+Checking for duplicate atoms....
+Generating any missing hydrogen atoms and/or adding termini.
+Now there are 2 residues with 2 atoms
+Chain time...
+Including chain 1 in system: 927 atoms 61 residues
+Including chain 2 in system: 2 atoms 2 residues
+		--------- PLEASE NOTE ------------
+You have successfully generated a topology from: protein-gmx.pdb.
+The Amberfb15 force field and the tip3pfb water model are used.
+		--------- ETON ESAELP ------------
+
+gcq#161: "If You Don't Like Cool Quotes Check Your GMXRC File" (Your Sysadmin)
+

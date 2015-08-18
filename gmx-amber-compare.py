@@ -12,6 +12,7 @@ import simtk.openmm.app as app
 import simtk.openmm as mm
 import simtk.unit as u
 import argparse
+import IPython
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ff', type=str, default='fb15', choices=['fb15', 'fb15ni', 'ildn'], help='Select a force field to compare between Gromacs and AMBER.')
@@ -123,6 +124,9 @@ del gmx_pdb.Data['elem']
 # List of atoms in the current residue
 anameInResidue = []
 anumInResidue = []
+
+anirs = []
+
 for i in range(gmx_pdb.na):
     # Rename the ions residue names to be compatible with Gromacs
     if gmx_pdb.resname[i] == 'Na+':
@@ -160,9 +164,10 @@ for i in range(gmx_pdb.na):
         if mapped:
             for anum, aname in zip(anumInResidue, anameInResidue):
                 gmx_pdb.atomname[anum] = amb_gmx_amap[k][aname]
+        anirs.append(anameInResidue)
         anameInResidue = []
         anumInResidue = []
-    
+
 # Write the Gromacs-compatible PDB file
 gmx_pdbfnm = os.path.splitext(sys.argv[1])[0]+"-gmx.pdb"
 gmx_pdb.write(gmx_pdbfnm)
@@ -211,6 +216,7 @@ for i in range(gmx_pdb.na):
         anameInResidue_gro = []
 
 amb_pdb = Molecule(amb_outpdbfnm, build_topology=False)
+
 anumInResidue = []
 anameInResidue_pdb = []
 anameInResidue_amb = []
@@ -316,3 +322,5 @@ D_FrcRMS = np.sqrt(np.mean([sum(k**2) for k in D_Force]))
 D_FrcMax = np.sqrt(np.max(np.array([sum(k**2) for k in D_Force])))
 
 print "RMS / Max Force Difference (kJ/mol/nm): % .6e % .6e" % (D_FrcRMS, D_FrcMax)
+
+IPython.embed()

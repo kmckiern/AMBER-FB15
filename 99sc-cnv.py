@@ -104,7 +104,7 @@ def get_ijkl(aci, acj, ack, acl):
 # the sidechain-specific dihedral parameters.
 def ParseRTP(rtp):
     for line in open(rtp).readlines():
-        line = line.split(';')[0].strip()
+        line = line.split('!')[0].strip()
         s = line.split()
         if len(s) == 0: continue
         if re.match('\[ .* \]$', line):
@@ -113,7 +113,7 @@ def ParseRTP(rtp):
             # Here we make a new dictionary for each amino acid.
             if section not in ['bondedtypes', 'atoms', 'bonds', 'dihedrals', 'impropers']:
                 AA = section
-                GAnAt[AA] = dict()
+                CAnAt[AA] = dict()
         elif section == 'atoms':
             # The GROMACS atom types are the same as OpenMM atom classes
             # and they should serve as the default atom class when we 

@@ -1,0 +1,6 @@
+source leaprc.fb15
+pdb = loadpdb water.pdb
+savepdb pdb water-amb.pdb
+saveamberparm pdb prmtop inpcrd
+quit
+

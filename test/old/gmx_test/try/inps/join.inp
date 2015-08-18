@@ -1,0 +1,59 @@
+* Append the PDBs
+*
+bomlev -2
+ 
+! Read in Topology and  Parameter files
+read rtf card name "fb15.rtf"
+
+OPEN UNIT 1 CARD READ NAME "water_ions.rtf"
+READ RTF CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+read param card name "fb15.prm"
+
+OPEN UNIT 1 CARD READ NAME "water_ions.prm"
+READ PARA CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+! Read PSF from file
+OPEN UNIT 1 FORM READ NAME fb15-pro-final.psf
+READ PSF CARD UNIT 1
+CLOSe UNIT 1
+
+OPEN UNIT 1 FORM READ NAME water_ions-final.psf
+READ PSF CARD APPEnd UNIT 1
+CLOSe UNIT 1
+
+! Read protein coord from the coordinate file
+OPEN UNIT 1 CARD READ NAME fb15-pro-final.crd
+READ COOR CARD UNIT 1 RESID
+CLOSE UNIT 1
+
+OPEN UNIT 1 CARD READ NAME water_ions-final.crd
+READ COOR RESId IGNOre UNIT 1 SELEct SEGId A .AND. RESN TIP3 END
+CLOSE UNIT 1
+
+! redo hydrogen coordinates for the complete structure
+COOR INIT SELE HYDRogen END
+HBUILd
+
+ENERgy
+
+OPEN UNIT 1 CARD WRITe NAME ubq_gas-full.psf
+WRITe PSF CARD UNIT 1
+* PSF
+*
+
+OPEN UNIT 1 CARD WRITe NAME ubq_gas-full.pdb
+WRITe COOR PDB UNIT 1
+* Coords
+*
+
+OPEN UNIT 1 CARD WRITe NAME ubq_gas-full.crd
+WRITe COOR CARD UNIT 1
+* Coords
+*
+ 
+ stop
+
+

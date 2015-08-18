@@ -1,0 +1,11 @@
+* Append the PDBs
+*
+bomlev -2
+
+! Read in Topology and  Parameter files
+read rtf card name "fb15.rtf"
+read param card name "fb15.prm"
+
+stop
+
+

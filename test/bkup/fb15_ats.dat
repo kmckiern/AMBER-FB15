@@ -1,0 +1,95 @@
+MASS   1  C  12.01   ! sp2 C carbonyl group
+MASS   2  CA 12.01   ! sp2 C pure aromatic (benzene)
+MASS   3  CB 12.01   ! sp2 aromatic C, 5&6 membered ring junction
+MASS   4  CC 12.01   ! sp2 aromatic C, 5 memb. ring HIS
+MASS   5  CD 12.01   ! sp2 C atom in the middle of: C=CD-CD=C
+MASS   6  CK 12.01   ! sp2 C 5 memb.ring in purines
+MASS   7  CM 12.01   ! sp2 C  pyrimidines in pos. 5 & 6
+MASS   8  CN 12.01   ! sp2 C aromatic 5&6 memb.ring junct.(TRP)
+MASS   9  CQ 12.01   ! sp2 C in 5 mem.ring of purines between 2 N
+MASS  10  CR 12.01   ! sp2 arom as CQ but in HIS
+MASS  11  CT 12.01   ! sp3 aliphatic C
+MASS  12  CV 12.01   ! sp2 arom. 5 memb.ring w/1 N and 1 H (HIS)
+MASS  13  CW 12.01   ! sp2 arom. 5 memb.ring w/1 N-H and 1 H (HIS)
+MASS  14  CS 12.01   ! sp2 arom. 5 memb.ring w/1 subst. (TRP)
+MASS  15  CY 12.01   ! nitrile C (Howard et al.JCC,16,243,1995)
+MASS  16  CZ 12.01   ! sp C (Howard et al.JCC,16,243,1995)
+MASS  17  C0 40.08   ! calcium
+MASS  18  H  1.008   ! H bonded to nitrogen atoms
+MASS  19  HC 1.008   ! H aliph. bond. to C without electrwd.group
+MASS  20  H1 1.008   ! H aliph. bond. to C with 1 electrwd. group
+MASS  21  H2 1.008   ! H aliph. bond. to C with 2 electrwd.groups
+MASS  22  H3 1.008   ! H aliph. bond. to C with 3 eletrwd.groups
+MASS  23  HA 1.008   ! H arom. bond. to C without elctrwd. groups
+MASS  24  H4 1.008   ! H arom. bond. to C with 1 electrwd. group
+MASS  25  H5 1.008   ! H arom.at C with 2 elctrwd. gr,+HCOO group
+MASS  26  HO 1.008   ! hydroxyl group
+MASS  27  HS 1.008   ! hydrogen bonded to sulphur (pol?)
+MASS  28  HW 1.008   ! H in TIP3P water
+MASS  29  HP 1.008   ! H bonded to C next to positively charged gr
+MASS  30  HZ 1.008   ! H bond sp C (Howard et al.JCC,16,243,1995)
+MASS  31  F  19.00   ! fluorine
+MASS  32  Cl 35.45   ! chlorine  (Applequist)
+MASS  33  Br 79.90   ! bromine  (Applequist)
+MASS  34  I  126.9   ! iodine   (Applequist)
+MASS  35  IM 35.45   ! assumed to be Cl- (ion minus)
+MASS  36  IB 131.0   ! 'big ion w/ waters' for vacuum (Na+, 6H2O)
+MASS  37  MG 24.305  ! magnesium
+MASS  38  N  14.01   ! sp2 nitrogen in amide groups
+MASS  39  NA 14.01   ! sp2 N in 5 memb.ring w/H atom (HIS)
+MASS  40  NB 14.01   ! sp2 N in 5 memb.ring w/LP (HIS,ADE,GUA)
+MASS  41  NC 14.01   ! sp2 N in 6 memb.ring w/LP (ADE,GUA)
+MASS  42  N2 14.01   ! sp2 N in amino groups
+MASS  43  N3 14.01   ! sp3 N for charged amino groups (Lys, etc)
+MASS  44  NT 14.01   ! sp3 N for amino groups amino groups
+MASS  45  NS 14.01   ! sp2 N
+MASS  46  NY 14.01   ! nitrile N (Howard et al.JCC,16,243,1995)
+MASS  47  O  16.00   ! carbonyl group oxygen
+MASS  48  O2 16.00   ! carboxyl and phosphate group oxygen
+MASS  49  OW 16.00   ! oxygen in TIP3P water
+MASS  50  OH 16.00   ! oxygen in hydroxyl group
+MASS  51  OS 16.00   ! ether and ester oxygen
+MASS  52  P  30.97   ! phosphate,pol:JACS,112,8543,90,K.J.Miller
+MASS  53  S  32.06   ! S in disulfide linkage,pol:JPC,102,2399,98
+MASS  54  SH 32.06   ! S in cystine
+MASS  55  Li  6.94   ! lithium, ions pol:J.PhysC,11,1541,(1978)
+MASS  56  IP 22.99   ! assumed to be Na+ (ion plus)
+MASS  57  K  39.10   ! potassium
+MASS  58  Rb 85.47   ! rubidium
+MASS  59  Es 132.91  ! cesium
+MASS  60  Zn  65.4   ! Zn2+
+MASS  61  LP  3.00   ! lone pair
+MASS  62  OX  15.99940 ! hydroxide oxygen
+MASS  63  HX  1.00800 ! hydroxide hydrogen
+MASS  64  CAL 40.08000 ! Calcium Ion
+MASS  65  BAR 137.32700 ! Barium Ion
+MASS  66  CAD 112.41100 ! cadmium (II) cation
+MASS  67  5P 12.01   ! FB15  sp3 aliphatic C
+MASS  68  5c 12.01   ! FB15  sp3 aliphatic C
+MASS  69  5d 12.01   ! FB15  sp3 aliphatic C
+MASS  70  5e 12.01   ! FB15  sp3 aliphatic C
+MASS  71  5h 12.01   ! FB15  sp3 aliphatic C
+MASS  72  5i 12.01   ! FB15  sp3 aliphatic C
+MASS  73  5j 12.01   ! FB15  sp3 aliphatic C
+MASS  74  5k 12.01   ! FB15  sp3 aliphatic C
+MASS  75  5q 12.01   ! FB15  sp3 aliphatic C
+MASS  76  5t 12.01   ! FB15  sp3 aliphatic C
+MASS  77  6C 12.01   ! FB15  sp3 aliphatic C
+MASS  78  6D 12.01   ! FB15  sp3 aliphatic C
+MASS  79  6E 12.01   ! FB15  sp3 aliphatic C
+MASS  80  6F 12.01   ! FB15  sp3 aliphatic C
+MASS  81  6H 12.01   ! FB15  sp3 aliphatic C
+MASS  82  6I 12.01   ! FB15  sp3 aliphatic C
+MASS  83  6J 12.01   ! FB15  sp3 aliphatic C
+MASS  84  6K 12.01   ! FB15  sp3 aliphatic C
+MASS  85  6L 12.01   ! FB15  sp3 aliphatic C
+MASS  86  6M 12.01   ! FB15  sp3 aliphatic C
+MASS  87  6N 12.01   ! FB15  sp3 aliphatic C
+MASS  88  6P 12.01   ! FB15  sp3 aliphatic C
+MASS  89  6Q 12.01   ! FB15  sp3 aliphatic C
+MASS  90  6R 12.01   ! FB15  sp3 aliphatic C
+MASS  91  6S 12.01   ! FB15  sp3 aliphatic C
+MASS  92  6T 12.01   ! FB15  sp3 aliphatic C
+MASS  93  6V 12.01   ! FB15  sp3 aliphatic C
+MASS  94  6W 12.01   ! FB15  sp3 aliphatic C
+MASS  95  6Y 12.01   ! FB15  sp3 aliphatic C

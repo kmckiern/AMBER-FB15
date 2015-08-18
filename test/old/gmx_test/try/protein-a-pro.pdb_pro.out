@@ -1,0 +1,269 @@
+1
+                 Chemistry at HARvard Macromolecular Mechanics
+            (CHARMM) - Developmental Version 37b2  February 15, 2013            
+       Copyright(c) 1984-2001  President and Fellows of Harvard College
+                              All Rights Reserved
+       Current operating system: Linux-3.8.0-35-generic(x86_64)@not0rious       
+                 Created on  8/10/15 at 14:55:28 by user: kmckiern    
+
+            Maximum number of ATOMS:     60120, and RESidues:       20040
+ RDTITL> * RUN SEGMENT THROUGH CHARMM
+ RDTITL> *
+  
+ CHARMM>     
+  
+ CHARMM>    ! read topology and parameter files
+ CHARMM>     
+  
+ CHARMM>    read rtf card name "fb15.rtf"
+ VOPEN> Attempting to open::fb15.rtf::
+ MAINIO> Residue topology file being read from unit  90.
+ TITLE> *  AMBER CORNELL ET AL. (PARM94 & PARM99) FORCE FIELD CONVERSION
+ TITLE> *  SEE: JACS (1995) 117, 5179-5197.
+ TITLE> *  SEE:  J COMP. CHEM. (2000) 21, 1049-1074.
+ TITLE> *  NUCLEIC ACID PART CONVERTED BY TEC3, MARCH 1997
+ TITLE> *  PROTEIN PART CONVERTED BY TEC3, FEBRUARY 1999
+ TITLE> *  CHANGES FOR PARM99 BY JEFF KLAUDA OCTOBER 2003
+ TITLE> 23    1
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>    read param card name "fb15.prm"
+ VOPEN> Attempting to open::fb15.prm::
+
+          PARAMETER FILE BEING READ FROM UNIT 90
+ TITLE> *  AMBER PARM99SB FORCE FIELD CONVERSION
+ TITLE> *  SEE: PROTIENS: STR. FUNC. AND BIOINFO. 65, 712 (2006)
+ TITLE> *
+ PARMIO> NONBOND, HBOND lists and IMAGE atoms cleared.
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! Read sequence from the PDB coordinate file
+ CHARMM>    open unit 1 card read name new_mdt_protein-a-pro.pdb
+ VOPEN> Attempting to open::new_mdt_protein-a-pro.pdb::
+ OPNLGU> Unit  1 opened for READONLY access to new_mdt_protein-a-pro.pdb
+  
+ CHARMM>    read sequ pdb unit 1
+ MAINIO> Sequence information being read from unit   1.
+ TITLE>  *
+
+          RESIDUE SEQUENCE --    61 RESIDUES
+          MET THR PRO ALA VAL THR THR TYR LYS LEU VAL ILE ASN GLY LYS THR LEU LYS GLY GLU 
+          THR THR THR LYS ALA VAL ASP ALA GLU THR ALA GLU LYS ALA PHE LYS GLN TYR ALA ASN 
+          ASP ASN GLY VAL ASP GLY VAL TRP THR TYR ASP ASP ALA THR LYS THR PHE THR VAL THR 
+          GLU 
+ ***** Message from SEQRDR ***** THE SYSTEM CONTAINS 19 TITRATABLE GROUPS
+ THE USER MUST PREDETERMINE THE PROTONATION STATE THROUGH THE SEQUENCE AND RTF
+ HIS -  0  ASP -  5  GLU -  4  LYS -  7  TYR -  3
+  
+ CHARMM>     
+  
+ CHARMM>    ! now generate the PSF and also the IC table (SETU keyword)
+ CHARMM>    generate pro setup
+ THE PATCH 'NMET' WILL BE USED FOR THE FIRST RESIDUE
+ THE PATCH 'CGLU' WILL BE USED FOR THE LAST  RESIDUE
+ GENPSF> Segment   1 has been generated. Its identifier is PRO.
+ PSFSUM> PSF modified: NONBOND lists and IMAGE atoms cleared.
+ PSFSUM> Summary of the structure file counters :
+         Number of segments      =        1   Number of residues   =       61
+         Number of atoms         =      927   Number of groups     =       57
+         Number of bonds         =      934   Number of angles     =     1688
+         Number of dihedrals     =     2465   Number of impropers  =      175
+         Number of cross-terms   =        0
+         Number of HB acceptors  =      100   Number of HB donors  =      108
+         Number of NB exclusions =        0   Total charge =   -2.00000
+  
+ CHARMM>     
+  
+ CHARMM>    rewind unit 1
+                    REWINDING UNIT     1
+  
+ CHARMM>     
+  
+ CHARMM>    ! set bomlev to -1 to avois sying on lack of hydrogen coordinates
+ CHARMM>    bomlev -1
+  
+ CHARMM>    read coor pdb unit 1
+  read CHARMM-pdb format
+          SPATIAL COORDINATES BEING READ FROM UNIT  1
+ TITLE>  *
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=    2 IRES=    1 RESID=1    RES=MET  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=    3 IRES=    1 RESID=1    RES=MET  ATOM=H2  
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=    4 IRES=    1 RESID=1    RES=MET  ATOM=H3  
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   11 IRES=    1 RESID=1    RES=MET  ATOM=HB3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   14 IRES=    1 RESID=1    RES=MET  ATOM=HG3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   21 IRES=    2 RESID=2    RES=THR  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   41 IRES=    3 RESID=3    RES=PRO  ATOM=HB3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   44 IRES=    3 RESID=3    RES=PRO  ATOM=HG3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   47 IRES=    3 RESID=3    RES=PRO  ATOM=HD3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   49 IRES=    4 RESID=4    RES=ALA  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   59 IRES=    5 RESID=5    RES=VAL  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   75 IRES=    6 RESID=6    RES=THR  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=   89 IRES=    7 RESID=7    RES=THR  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  103 IRES=    8 RESID=8    RES=TYR  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  110 IRES=    8 RESID=8    RES=TYR  ATOM=HB3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  124 IRES=    9 RESID=9    RES=LYS  ATOM=H   
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  131 IRES=    9 RESID=9    RES=LYS  ATOM=HB3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  134 IRES=    9 RESID=9    RES=LYS  ATOM=HG3 
+
+ ** WARNING ** For atom in coordinate file, the corresponding residue in the PSF lacks that atom:
+ INDEX=  137 IRES=    9 RESID=9    RES=LYS  ATOM=HD3 
+ ** WARNING ** After reading, there are no coordinates for selected atom:     2     1 MET  HT1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:     3     1 MET  HT2 
+ ** WARNING ** After reading, there are no coordinates for selected atom:     4     1 MET  HT3 
+ ** WARNING ** After reading, there are no coordinates for selected atom:     8     1 MET  HB1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:    11     1 MET  HG1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:    21     2 THR  HN  
+ ** WARNING ** After reading, there are no coordinates for selected atom:    36     3 PRO  HD1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:    39     3 PRO  HG1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:    42     3 PRO  HB1 
+ ** WARNING ** After reading, there are no coordinates for selected atom:    49     4 ALA  HN  
+
+ ** A total of   129 selected atoms have no coordinates
+
+ ** A total of  129 warnings were encountered during coordinate reading **
+ *** LEVEL  2 WARNING *** BOMLEV IS   -1
+  
+ CHARMM>    ! them put bomlev back up to 0
+ CHARMM>    bomlev 0
+  
+ CHARMM>     
+  
+ CHARMM>    close unit 1
+ VCLOSE: Closing unit    1 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    ! prints out number of atoms that still have undefined coordinates.
+ CHARMM>    define test select segid a-pro .and. ( .not. hydrogen ) .and. ( .not. init ) show end
+ The following atoms are currently set:
+SEGId RESId RESName  .. TYPEs ..
+ SELRPN>      0 atoms have been selected out of    927
+  
+ CHARMM>     
+  
+ CHARMM>    ic para
+  
+ CHARMM>    ic fill preserve
+  
+ CHARMM>    ic build
+  
+ CHARMM>    hbuild sele all end
+ SELRPN>    927 atoms have been selected out of    927
+
+      ***** LEVEL  4 WARNING FROM <GTHBUI> *****
+      ***** Zero selection specified
+      ******************************************
+      BOMLEV (  0) IS NOT REACHED. WRNLEV IS  5
+
+  
+ CHARMM>     
+  
+ CHARMM>    energy
+
+ NONBOND OPTION FLAGS: 
+     ELEC     VDW      GROUps   CDIElec  SWITch   VGROup   VSWItch 
+     BYGRoup  NOEXtnd  NOEWald 
+ CUTNB  = 14.000 CTEXNB =999.000 CTONNB = 10.000 CTOFNB = 12.000
+ CGONNB =  0.000 CGOFNB = 10.000
+ WMIN   =  1.400 WRNMXD =  0.500 E14FAC =  0.833 EPS    =  1.000
+ NBXMOD =      5
+ There are        0 atom  pairs and        0 atom  exclusions.
+ There are        0 group pairs and        0 group exclusions.
+ <MAKINB> with mode   5 found   2622 exclusions and   2437 interactions(1-4)
+ <MAKGRP> found     56 group exclusions.
+ Generating nonbond list with Exclusion mode = 5
+ == PRIMARY == SPACE FOR   266374 ATOM PAIRS AND     1238 GROUP PAIRS
+
+ General group nonbond list generation found:
+      790 GROUP PAIRS WERE FOUND FOR GROUP LIST
+      863 GROUP PAIRS WERE BEYOND CUTOFFS
+        0 GROUP PAIRS WERE NOT SELECTED
+        0 QM group pairs excluded
+ENER ENR:  Eval#     ENERgy      Delta-E         GRMS
+ENER INTERN:          BONDs       ANGLes       UREY-b    DIHEdrals    IMPRopers
+ENER EXTERN:        VDWaals         ELEC       HBONds          ASP         USER
+ ----------       ---------    ---------    ---------    ---------    ---------
+ENER>        0 204202.24622      0.00000    256.74633
+ENER INTERN>      103.09794   3365.89132      0.00000 200683.96496   1799.32158
+ENER EXTERN>     -215.21685  -1534.81274      0.00000      0.00000      0.00000
+ ----------       ---------    ---------    ---------    ---------    ---------
+  
+ CHARMM>     
+  
+ CHARMM>    ! write out the protein structure file (psf) and
+ CHARMM>    ! the coordinate file in pdb and crd format.
+ CHARMM>     
+  
+ CHARMM>    write psf card name fb15-pro-final.psf
+ VOPEN> Attempting to open::fb15-pro-final.psf::
+ RDTITL> * PSF
+ RDTITL> *
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    write coor card name fb15-pro-final.crd
+ VOPEN> Attempting to open::fb15-pro-final.crd::
+ RDTITL> * COORDS
+ RDTITL> *
+ VCLOSE: Closing unit   90 with status "KEEP"
+ VCLOSE: Closing unit   90 with status "KEEP"
+  
+ CHARMM>     
+  
+ CHARMM>    stop
+$$$$$$  New timer profile $$$$$
+   List time                       0.00 Other:            0.00
+      Nonbond force                   0.00 Other:            0.00
+         Bond energy                     0.00 Other:            0.00
+         Angle energy                    0.00 Other:            0.00
+         Dihedral energy                 0.00 Other:            0.00
+         Restraints energy               0.00 Other:            0.00
+      INTRNL energy                   0.00 Other:            0.00
+   Energy time                     0.00 Other:            0.00
+ Total time                      0.09 Other:            0.08
+
+                    NORMAL TERMINATION BY NORMAL STOP
+                    MOST SEVERE WARNING WAS AT LEVEL  2
+
+                    $$$$$ JOB ACCOUNTING INFORMATION $$$$$
+                     ELAPSED TIME:     0.09  SECONDS 
+                         CPU TIME:     0.09  SECONDS 

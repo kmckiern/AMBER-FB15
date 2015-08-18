@@ -104,9 +104,6 @@ A99_Hyb = OrderedDict([("H",  ("H", "sp3")), ("HO", ("H", "sp3")), ("HS", ("H", 
 # Note components unique to CHARMM (need to be mapped uniquely later)
 # Type99 atom types 
 CType99 = {"C*": "CS", "N*": "NS"}
-# Symmetric difference between A99SB xml and CHRM RTF residue names
-AResOnly = ['LYN', 'ASH']
-CResOnly = ['GUA', 'URA', 'THY', 'CYT', 'CYX', 'ALA', 'GLY', 'ACE', 'ADE', 'NME', 'TIP3', 'CIP']
 
 def sub_key(key, reference_dict):
     ref_keys = reference_dict.keys()
@@ -515,14 +512,17 @@ def update_di(line, section, new_p, mult, num_AC):
 
 # check nonbonded parameters
 def update_nb(line, section, new_p, num_AC):
-    l = line.split()
+    l = line.split('!')[0].split()
     # new params
     mass, sig, eps = new_p
     # convert to CHARMM convention
     sig = sig*(2.0**(1.0/6.0))/2.0
     # old params
     eps_0 = l[2]
-    sig_0 = l[6]
+    if len(l) == 4:
+        sig_0 = l[3]
+    else:
+        sig_0 = l[6]
     o_eps = -1.0 * float(eps_0)
     o_sig = float(sig_0)
     if almostequal(sig, o_sig, 1e-8) and almostequal(eps, o_eps, 1e-8):
@@ -550,9 +550,9 @@ def update_nb(line, section, new_p, num_AC):
 # wrapper function
 def update_parameters(line, section, new_p, ptup, match_mult=True):
     l_ptup = len(ptup)
-    if section == 'BONDS' or section == 'THETAS':
+    if section == 'BONDS' or section == 'ANGLES':
         l = [update_ba(line, section, new_p, l_ptup)]
-    elif section == 'PHI' or section == 'IMPHI':
+    elif section == 'DIHEDRALS' or section == 'IMPROPER':
         l = []
         for mult in new_p:
             if match_mult:
@@ -565,20 +565,20 @@ def update_parameters(line, section, new_p, ptup, match_mult=True):
 
 # parameter type: (number of parameters, spacing between parameters,
 #      (equilibrium *, force constant))
-section_data = {'BONDS': (2, 3, (5, 5)), 'THETAS': (3, 3, (4, 6)), 'PHI': (4, 2, (10, 5)), 
-    'IMPHI': (4, 2, (3, 5)), 'NONBONDED': (1, 0, (8, 8))}
+section_data = {'BONDS': (2, 3, (5, 5)), 'ANGLES': (3, 3, (4, 6)), 'DIHEDRALS': (4, 2, (10, 5)), 
+    'IMPROPER': (4, 2, (3, 5)), 'NONBONDED': (1, 0, (8, 8))}
 # 'NONBONDED': (1, 0, (3, 9, 8, 3, 10, 8))
 sections = section_data.keys()
 # parameters with modified values
-orig_params = {'BONDS': A99SB_BondPrm, 'THETAS': A99SB_AnglePrm, 
-    'PHI': A99SB_DihPrm, 'IMPHI': A99SB_ImpPrm, 'NONBONDED': A99SB_NbPrm}
+orig_params = {'BONDS': A99SB_BondPrm, 'ANGLES': A99SB_AnglePrm, 
+    'DIHEDRALS': A99SB_DihPrm, 'IMPROPER': A99SB_ImpPrm, 'NONBONDED': A99SB_NbPrm}
 modified = orig_params.keys()
 # map old bonded parameter dicts to new param dicts
-new_params = {'BONDS': A99SBFB_BondPrm, 'THETAS': A99SBFB_AnglePrm, 
-    'PHI': A99SBFB_DihPrm, 'IMPHI': A99SBFB_ImpPrm, 'NONBONDED': A99SBFB_NbPrm}
+new_params = {'BONDS': A99SBFB_BondPrm, 'ANGLES': A99SBFB_AnglePrm, 
+    'DIHEDRALS': A99SBFB_DihPrm, 'IMPROPER': A99SBFB_ImpPrm, 'NONBONDED': A99SBFB_NbPrm}
 # map from section to exclusively unique new parameter values
-new_AC_params = {'BONDS': BondPrm_new, 'THETAS': AnglePrm_new, 
-    'PHI': DihPrm_new, 'IMPHI': ImpPrm_new, 'NONBONDED': NbPrm_new}
+new_AC_params = {'BONDS': BondPrm_new, 'ANGLES': AnglePrm_new, 
+    'DIHEDRALS': DihPrm_new, 'IMPROPER': ImpPrm_new, 'NONBONDED': NbPrm_new}
 
 # Parse PRM
 # determine which atom class quartets receive

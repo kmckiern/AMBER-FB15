@@ -1,0 +1,6 @@
+source leaprc.fb15
+pdb = loadpdb protein.pdb
+savepdb pdb protein-amb.pdb
+saveamberparm pdb prmtop inpcrd
+quit
+
